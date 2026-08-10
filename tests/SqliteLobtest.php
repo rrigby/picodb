@@ -53,6 +53,12 @@ class SqliteLobTest extends \PHPUnit\Framework\TestCase
         $this->assertSame(md5(file_get_contents(__FILE__)), md5($contents));
     }
 
+    public function testFindOneColumnAsStringReturnsEmptyStringWhenNoRowMatches()
+    {
+        $contents = $this->db->largeObject('large_objects')->eq('id', 'nonexistent')->findOneColumnAsString('file_content');
+        $this->assertSame('', $contents);
+    }
+
     public function testUpdate()
     {
         $result = $this->db->largeObject('large_objects')->insertFromFile('file_content', __FILE__, array('id' => 'test1'));

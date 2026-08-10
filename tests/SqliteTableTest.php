@@ -976,4 +976,20 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
             $this->db->hashtable('toto')->getAll('column1', 'column2')
         );
     }
+
+    public function testHashTableSkipsRowsWithNullKey()
+    {
+        $this->assertNotFalse($this->db->execute(
+            'CREATE TABLE toto (column1 TEXT, column2 TEXT)'
+        ));
+
+        $this->assertTrue($this->db->table('toto')->insert(array('column1' => 'a', 'column2' => 'value_a')));
+        $this->assertTrue($this->db->table('toto')->insert(array('column1' => null, 'column2' => 'value_null')));
+        $this->assertTrue($this->db->table('toto')->insert(array('column1' => 'b', 'column2' => 'value_b')));
+
+        $this->assertEquals(
+            array('a' => 'value_a', 'b' => 'value_b'),
+            $this->db->hashtable('toto')->columnKey('column1')->columnValue('column2')->get()
+        );
+    }
 }

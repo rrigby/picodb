@@ -114,7 +114,7 @@ class Table
      * SQL limit
      *
      * @access private
-     * @var    int
+     * @var    int|null
      */
     private $sqlLimit = null;
 
@@ -122,7 +122,7 @@ class Table
      * SQL offset
      *
      * @access private
-     * @var    int
+     * @var    int|null
      */
     private $sqlOffset = null;
 
@@ -186,7 +186,7 @@ class Table
      * Callback for result filtering
      *
      * @access private
-     * @var    Closure
+     * @var    Closure|null
      */
     private $callback = null;
 
@@ -841,12 +841,12 @@ class Table
      * Add callback to alter the resultset
      *
      * @access public
-     * @param  Closure|array  $callback
+     * @param  callable  $callback
      * @return $this
      */
     public function callback($callback)
     {
-        $this->callback = $callback;
+        $this->callback = Closure::fromCallable($callback);
         return $this;
     }
 

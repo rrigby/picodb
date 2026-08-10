@@ -20,7 +20,7 @@ class StatementHandler
      * @access protected
      * @var Database
      */
-    protected $db = null;
+    protected $db;
 
     /**
      * Flag to calculate query time
@@ -235,10 +235,8 @@ class StatementHandler
     /**
      * Execute a prepared statement
      *
-     * Note: returns false on duplicate keys instead of SQLException
-     *
      * @access public
-     * @return PDOStatement|false
+     * @return PDOStatement
      * @throws SQLException
      */
     public function execute()
@@ -247,13 +245,19 @@ class StatementHandler
             $this->beforeExecute();
 
             $pdoStatement = $this->db->getConnection()->prepare($this->sql);
+
+            // Unreachable at runtime (ERRMODE_EXCEPTION makes prepare() throw); kept to satisfy the type checker.
+            if ($pdoStatement === false) {
+                throw new SQLException('Failed to prepare SQL statement');
+            }
+
             $this->bindParams($pdoStatement);
             $pdoStatement->execute();
 
             $this->afterExecute();
             return $pdoStatement;
         } catch (PDOException $e) {
-            return $this->handleSqlError($e);
+            $this->handleSqlError($e);
         }
     }
 
@@ -365,6 +369,7 @@ class StatementHandler
      *
      * @access public
      * @param  PDOException $e
+     * @return never
      * @throws SQLException
      */
     public function handleSqlError(PDOException $e)

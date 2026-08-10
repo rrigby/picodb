@@ -71,10 +71,11 @@ class Hashtable extends Table
      * Hashmap result [ [column1 => column2], [], ...]
      *
      * @access public
-     * @return array
+     * @return array<array-key, scalar|null>
      */
     public function get()
     {
+        /** @var array<array-key, scalar|null> $hashmap */
         $hashmap = array();
 
         // setup where condition
@@ -86,10 +87,14 @@ class Hashtable extends Table
         $this->columns($this->keyColumn, $this->valueColumn);
 
         $rq = $this->db->execute($this->buildSelectQuery(), $this->conditionBuilder->getValues());
+        /** @var list<array{0: scalar|null, 1: scalar|null}> $rows */
         $rows = $rq->fetchAll(PDO::FETCH_NUM);
 
-        foreach ($rows as $row) {
-            $hashmap[$row[0]] = $row[1];
+        foreach ($rows as [$key, $value]) {
+            if ($key === null || is_bool($key) || is_float($key)) {
+                continue;
+            }
+            $hashmap[$key] = $value;
         }
 
         return $hashmap;

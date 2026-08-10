@@ -242,12 +242,11 @@ class Database
     /**
      * Execute a prepared statement
      *
-     * Note: returns false on duplicate keys instead of SQLException
-     *
      * @access public
      * @param  string    $sql      SQL query
      * @param  array     $values   Values
-     * @return \PDOStatement|false
+     * @return \PDOStatement
+     * @throws SQLException
      */
     public function execute($sql, array $values = array())
     {
@@ -274,7 +273,7 @@ class Database
 
             return $result === null ? true : $result;
         } catch (PDOException $e) {
-            return $this->statementHandler->handleSqlError($e);
+            $this->statementHandler->handleSqlError($e);
         }
     }
 

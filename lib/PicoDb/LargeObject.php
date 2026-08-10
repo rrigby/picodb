@@ -21,7 +21,7 @@ class LargeObject extends Table
      *
      * @access public
      * @param  string $column
-     * @return resource
+     * @return resource|string|null
      */
     public function findOneColumnAsStream($column)
     {
@@ -54,7 +54,12 @@ class LargeObject extends Table
             return $fd;
         }
 
-        return stream_get_contents($fd);
+        if ($fd === null) {
+            return '';
+        }
+
+        $contents = stream_get_contents($fd);
+        return $contents === false ? '' : $contents;
     }
 
     /**
@@ -71,7 +76,7 @@ class LargeObject extends Table
         $columns = array_merge(array($blobColumn), array_keys($data));
         $this->db->startTransaction();
 
-        $result =  $this->db->getStatementHandler()
+        $this->db->getStatementHandler()
             ->withSql(InsertBuilder::getInstance($this->db, $this->conditionBuilder)
                 ->withTable($this->name)
                 ->withColumns($columns)
@@ -83,7 +88,7 @@ class LargeObject extends Table
 
         $this->db->closeTransaction();
 
-        return $result !== false;
+        return true;
     }
 
     /**
@@ -98,8 +103,17 @@ class LargeObject extends Table
     public function insertFromFile($blobColumn, $filename, array $data = array())
     {
         $fp = fopen($filename, 'rb');
+
+        if ($fp === false) {
+            return false;
+        }
+
         $result = $this->insertFromStream($blobColumn, $fp, $data);
-        fclose($fp);
+
+        if (is_resource($fp)) {
+            fclose($fp);
+        }
+
         return $result;
     }
 
@@ -133,7 +147,7 @@ class LargeObject extends Table
 
         $this->db->startTransaction();
 
-        $result =  $this->db->getStatementHandler()
+        $this->db->getStatementHandler()
             ->withSql(UpdateBuilder::getInstance($this->db, $this->conditionBuilder)
                 ->withTable($this->name)
                 ->withColumns($columns)
@@ -145,7 +159,7 @@ class LargeObject extends Table
 
         $this->db->closeTransaction();
 
-        return $result !== false;
+        return true;
     }
 
     /**
@@ -160,8 +174,17 @@ class LargeObject extends Table
     public function updateFromFile($blobColumn, $filename, array $data = array())
     {
         $fp = fopen($filename, 'r');
+
+        if ($fp === false) {
+            return false;
+        }
+
         $result = $this->updateFromStream($blobColumn, $fp, $data);
-        fclose($fp);
+
+        if (is_resource($fp)) {
+            fclose($fp);
+        }
+
         return $result;
     }
 }

@@ -18,7 +18,7 @@ class Schema
      * @access protected
      * @var Database
      */
-    protected $db = null;
+    protected $db;
 
     /**
      * Schema namespace

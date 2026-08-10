@@ -198,8 +198,8 @@ class Mssql extends Base
     /**
      * Get offset limit clause
      *
-     * @param int $limit
-     * @param int $offset
+     * @param int|null $limit
+     * @param int|null $offset
      * @param string|null $order
      * @return string
      */

@@ -1,5 +1,5 @@
 {
-    "name": "elvanto/picodb",
+    "name": "rrigby/picodb",
     "description": "Minimalist database query builder",
     "type": "library",
     "license": "MIT",
