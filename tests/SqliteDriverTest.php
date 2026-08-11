@@ -1,57 +1,56 @@
 <?php
 
+use PHPUnit\Framework\TestCase;
+use PicoDb\Driver\Base;
 use PicoDb\Driver\Sqlite;
 
-class SqliteDriverTest extends \PHPUnit\Framework\TestCase
+class SqliteDriverTest extends TestCase
 {
-    /**
-     * @var PicoDb\Driver\Sqlite
-     */
-    private $driver;
+    private Sqlite $driver;
 
     public function setUp(): void
     {
-        $this->driver = new Sqlite(array('filename' => ':memory:'));
+        $this->driver = new Sqlite(['filename' => ':memory:']);
     }
 
-    public function testGetConnectionReturnsPdo()
+    public function testGetConnectionReturnsPdo(): void
     {
         $this->assertInstanceOf(PDO::class, $this->driver->getConnection());
     }
 
-    public function testGetConnectionThrowsWhenNotInitialized()
+    public function testGetConnectionThrowsWhenNotInitialized(): void
     {
         $this->expectException(LogicException::class);
         $this->expectExceptionMessage('The database connection is not established.');
 
-        $reflection = new ReflectionProperty(PicoDb\Driver\Base::class, 'pdo');
+        $reflection = new ReflectionProperty(Base::class, 'pdo');
         $reflection->setAccessible(true);
         $reflection->setValue($this->driver, null);
 
         $this->driver->getConnection();
     }
 
-    public function testMissingRequiredParameter()
+    public function testMissingRequiredParameter(): void
     {
         $this->expectException(LogicException::class);
 
-        new Sqlite(array());
+        new Sqlite([]);
     }
 
-    public function testDuplicateKeyError()
+    public function testDuplicateKeyError(): void
     {
         $this->assertFalse($this->driver->isDuplicateKeyError(1234));
         $this->assertTrue($this->driver->isDuplicateKeyError(23000));
     }
 
-    public function testOperator()
+    public function testOperator(): void
     {
         $this->assertEquals('LIKE', $this->driver->getOperator('LIKE'));
         $this->assertEquals('LIKE', $this->driver->getOperator('ILIKE'));
         $this->assertEquals('', $this->driver->getOperator('FOO'));
     }
 
-    public function testSchemaVersion()
+    public function testSchemaVersion(): void
     {
         $this->assertEquals(0, $this->driver->getSchemaVersion());
 
@@ -62,7 +61,7 @@ class SqliteDriverTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(42, $this->driver->getSchemaVersion());
     }
 
-    public function testLastInsertId()
+    public function testLastInsertId(): void
     {
         $this->assertEquals(0, $this->driver->getLastId());
 
@@ -72,17 +71,17 @@ class SqliteDriverTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(1, $this->driver->getLastId());
     }
 
-    public function testEscape()
+    public function testEscape(): void
     {
         $this->assertEquals('"foobar"', $this->driver->escape('foobar'));
     }
 
-    public function testDatabaseVersion()
+    public function testDatabaseVersion(): void
     {
         $this->assertStringStartsWith('3.', $this->driver->getDatabaseVersion());
     }
 
-    public function testExplainWithSingleQuoteValue()
+    public function testExplainWithSingleQuoteValue(): void
     {
         $this->driver->getConnection()->exec('CREATE TABLE foobar (name TEXT)');
         $result = $this->driver->explain('SELECT * FROM "foobar" WHERE "name" = ?', ["O'Brien"]);

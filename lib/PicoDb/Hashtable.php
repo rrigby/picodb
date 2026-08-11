@@ -13,30 +13,14 @@ use PDO;
  */
 class Hashtable extends Table
 {
-    /**
-     * Column for the key
-     *
-     * @access private
-     * @var    string
-     */
-    private $keyColumn = 'key';
+    private string $keyColumn = 'key';
 
-    /**
-     * Column for the value
-     *
-     * @access private
-     * @var    string
-     */
-    private $valueColumn = 'value';
+    private string $valueColumn = 'value';
 
     /**
      * Set the key column
-     *
-     * @access public
-     * @param  string  $column
-     * @return $this
      */
-    public function columnKey($column)
+    public function columnKey(string $column): static
     {
         $this->keyColumn = $column;
         return $this;
@@ -44,12 +28,8 @@ class Hashtable extends Table
 
     /**
      * Set the value column
-     *
-     * @access public
-     * @param  string  $column
-     * @return $this
      */
-    public function columnValue($column)
+    public function columnValue(string $column): static
     {
         $this->valueColumn = $column;
         return $this;
@@ -57,12 +37,8 @@ class Hashtable extends Table
 
     /**
      * Insert or update
-     *
-     * @access public
-     * @param  array    $hashmap
-     * @return boolean
      */
-    public function put(array $hashmap)
+    public function put(array $hashmap): bool
     {
         return $this->db->getDriver()->upsert($this->getName(), $this->keyColumn, $this->valueColumn, $hashmap);
     }
@@ -70,13 +46,12 @@ class Hashtable extends Table
     /**
      * Hashmap result [ [column1 => column2], [], ...]
      *
-     * @access public
      * @return array<array-key, scalar|null>
      */
-    public function get()
+    public function get(): array
     {
         /** @var array<array-key, scalar|null> $hashmap */
-        $hashmap = array();
+        $hashmap = [];
 
         // setup where condition
         if (func_num_args() > 0) {
@@ -91,7 +66,13 @@ class Hashtable extends Table
         $rows = $rq->fetchAll(PDO::FETCH_NUM);
 
         foreach ($rows as [$key, $value]) {
-            if ($key === null || is_bool($key) || is_float($key)) {
+            if ($key === null) {
+                continue;
+            }
+            if (is_bool($key)) {
+                continue;
+            }
+            if (is_float($key)) {
                 continue;
             }
             $hashmap[$key] = $value;
@@ -103,12 +84,10 @@ class Hashtable extends Table
     /**
      * Shortcut method to get a hashmap result
      *
-     * @access public
      * @param  string  $key    Key column
      * @param  string  $value  Value column
-     * @return array
      */
-    public function getAll($key, $value)
+    public function getAll(string $key, string $value): array
     {
         $this->keyColumn = $key;
         $this->valueColumn = $value;

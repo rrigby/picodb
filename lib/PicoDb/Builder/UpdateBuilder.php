@@ -13,16 +13,14 @@ class UpdateBuilder extends BaseBuilder implements BuilderInterface
     /**
      * @var string[]
      */
-    protected $sumColumns = array();
+    protected array $sumColumns = [];
 
     /**
      * Set columns name
      *
-     * @access public
      * @param  string[] $columns
-     * @return $this
      */
-    public function withSumColumns(array $columns)
+    public function withSumColumns(array $columns): static
     {
         $this->sumColumns = $columns;
         return $this;
@@ -30,13 +28,10 @@ class UpdateBuilder extends BaseBuilder implements BuilderInterface
 
     /**
      * Build SQL
-     *
-     * @access public
-     * @return string
      */
-    public function build()
+    public function build(): string
     {
-        $columns = array();
+        $columns = [];
 
         foreach ($this->columns as $column) {
             $columns[] = $this->db->escapeIdentifier($column).'=?';

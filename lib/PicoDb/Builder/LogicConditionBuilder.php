@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PicoDb\Builder;
 
 /**
@@ -11,47 +13,28 @@ namespace PicoDb\Builder;
 class LogicConditionBuilder implements BuilderInterface
 {
     /**
-     * @var string
-     */
-    private $type;
-
-    /**
-     * List of SQL conditions
-     *
-     * @access protected
      * @var string[]
      */
-    protected $conditions = array();
+    protected array $conditions = [];
 
-    /**
-     * LogicConditionBuilder constructor.
-     *
-     * @param string $type
-     */
-    public function __construct($type)
+    public function __construct(private string $type)
     {
-        $this->type = $type;
     }
 
     /**
      * Add new condition
      *
-     * @access public
      * @param  string $condition
-     * @return $this
      */
-    public function withCondition($condition) {
+    public function withCondition($condition): static {
         $this->conditions[] = $condition;
         return $this;
     }
 
     /**
      * Build SQL
-     *
-     * @access public
-     * @return string
      */
-    public function build()
+    public function build(): string
     {
         if ($this->type === 'NOT') {
             if (count($this->conditions) === 1) {

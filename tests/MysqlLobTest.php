@@ -1,63 +1,63 @@
 <?php
 
-class MysqlLobTest extends \PHPUnit\Framework\TestCase
+use PHPUnit\Framework\TestCase;
+use PicoDb\Database;
+
+class MysqlLobTest extends TestCase
 {
-    /**
-     * @var PicoDb\Database
-     */
-    private $db;
+    private Database $db;
 
     public function setUp(): void
     {
-        $this->db = new PicoDb\Database(array('driver' => 'mysql', 'hostname' => getenv('MYSQL_HOST'), 'username' => 'root', 'password' => 'rootpassword', 'database' => 'picodb'));
+        $this->db = new Database(['driver' => 'mysql', 'hostname' => getenv('MYSQL_HOST'), 'username' => 'root', 'password' => 'rootpassword', 'database' => 'picodb']);
         $this->db->getConnection()->exec('DROP TABLE IF EXISTS large_objects');
         $this->db->getConnection()->exec('CREATE TABLE large_objects (id VARCHAR(20), file_content BLOB)');
         $this->db->getStatementHandler()->withLogging();
     }
 
-    public function testInsert()
+    public function testInsert(): void
     {
-        $result = $this->db->largeObject('large_objects')->insertFromFile('file_content', __FILE__, array('id' => 'test'));
+        $result = $this->db->largeObject('large_objects')->insertFromFile('file_content', __FILE__, ['id' => 'test']);
         $this->assertTrue($result);
     }
 
-    public function testInsertFromString()
+    public function testInsertFromString(): void
     {
         $data = 'test';
-        $result = $this->db->largeObject('large_objects')->insertFromString('file_content', $data, array('id' => 'test'));
+        $result = $this->db->largeObject('large_objects')->insertFromString('file_content', $data, ['id' => 'test']);
         $this->assertTrue($result);
     }
 
-    public function testInsertWithOptionalParams()
+    public function testInsertWithOptionalParams(): void
     {
         $result = $this->db->largeObject('large_objects')->insertFromFile('file_content', __FILE__);
         $this->assertTrue($result);
     }
 
-    public function testFindOneColumnAsStream()
+    public function testFindOneColumnAsStream(): void
     {
-        $result = $this->db->largeObject('large_objects')->insertFromFile('file_content', __FILE__, array('id' => 'test'));
+        $result = $this->db->largeObject('large_objects')->insertFromFile('file_content', __FILE__, ['id' => 'test']);
         $this->assertTrue($result);
 
         $contents = $this->db->largeObject('large_objects')->eq('id', 'test')->findOneColumnAsStream('file_content');
         $this->assertSame(md5(file_get_contents(__FILE__)), md5(is_string($contents) ? $contents : stream_get_contents($contents)));
     }
 
-    public function testFindOneColumnAsString()
+    public function testFindOneColumnAsString(): void
     {
-        $result = $this->db->largeObject('large_objects')->insertFromFile('file_content', __FILE__, array('id' => 'test'));
+        $result = $this->db->largeObject('large_objects')->insertFromFile('file_content', __FILE__, ['id' => 'test']);
         $this->assertTrue($result);
 
         $contents = $this->db->largeObject('large_objects')->eq('id', 'test')->findOneColumnAsString('file_content');
         $this->assertSame(md5(file_get_contents(__FILE__)), md5($contents));
     }
 
-    public function testUpdate()
+    public function testUpdate(): void
     {
-        $result = $this->db->largeObject('large_objects')->insertFromFile('file_content', __FILE__, array('id' => 'test1'));
+        $result = $this->db->largeObject('large_objects')->insertFromFile('file_content', __FILE__, ['id' => 'test1']);
         $this->assertTrue($result);
 
-        $result = $this->db->largeObject('large_objects')->insertFromFile('file_content', __FILE__, array('id' => 'test2'));
+        $result = $this->db->largeObject('large_objects')->insertFromFile('file_content', __FILE__, ['id' => 'test2']);
         $this->assertTrue($result);
 
         $result = $this->db->largeObject('large_objects')->eq('id', 'test1')->updateFromFile('file_content', __DIR__.'/../LICENSE');

@@ -1,17 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+
 use PicoDb\Driver\Postgres;
 
-class PostgresDriverTest extends \PHPUnit\Framework\TestCase
+class PostgresDriverTest extends TestCase
 {
-    /**
-     * @var PicoDb\Driver\Postgres
-     */
-    private $driver;
+    private Postgres $driver;
 
     public function setUp(): void
     {
-        $this->driver = new Postgres(array('hostname' => getenv('POSTGRES_HOST'), 'username' => 'root', 'password' => 'rootpassword', 'database' => 'picodb'));
+        $this->driver = new Postgres(['hostname' => getenv('POSTGRES_HOST'), 'username' => 'root', 'password' => 'rootpassword', 'database' => 'picodb']);
         $this->driver->getConnection()->exec('DROP TABLE IF EXISTS foo');
         $this->driver->getConnection()->exec('DROP TABLE IF EXISTS foobar');
         $this->driver->getConnection()->exec('DROP TABLE IF EXISTS schema_version');
@@ -22,28 +23,28 @@ class PostgresDriverTest extends \PHPUnit\Framework\TestCase
         $this->driver->closeConnection();
     }
 
-    public function testMissingRequiredParameter()
+    public function testMissingRequiredParameter(): void
     {
         $this->expectException(LogicException::class);
 
-        new Postgres(array());
+        new Postgres([]);
     }
 
-    public function testDuplicateKeyError()
+    public function testDuplicateKeyError(): void
     {
         $this->assertFalse($this->driver->isDuplicateKeyError(1234));
         $this->assertTrue($this->driver->isDuplicateKeyError(23505));
         $this->assertTrue($this->driver->isDuplicateKeyError(23503));
     }
 
-    public function testOperator()
+    public function testOperator(): void
     {
         $this->assertEquals('LIKE', $this->driver->getOperator('LIKE'));
         $this->assertEquals('ILIKE', $this->driver->getOperator('ILIKE'));
         $this->assertEquals('', $this->driver->getOperator('FOO'));
     }
 
-    public function testSchemaVersion()
+    public function testSchemaVersion(): void
     {
         $this->assertEquals(0, $this->driver->getSchemaVersion());
 
@@ -54,7 +55,7 @@ class PostgresDriverTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(42, $this->driver->getSchemaVersion());
     }
 
-    public function testLastInsertId()
+    public function testLastInsertId(): void
     {
         $this->assertEquals(0, $this->driver->getLastId());
 
@@ -64,7 +65,7 @@ class PostgresDriverTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(1, $this->driver->getLastId());
     }
 
-    public function testEscape()
+    public function testEscape(): void
     {
         $this->assertEquals('"foobar"', $this->driver->escape('foobar'));
     }
@@ -74,7 +75,7 @@ class PostgresDriverTest extends \PHPUnit\Framework\TestCase
 //        $this->assertStringStartsWith('11.', $this->driver->getDatabaseVersion());
 //    }
 
-    public function testExplainWithSingleQuoteValue()
+    public function testExplainWithSingleQuoteValue(): void
     {
         $this->driver->getConnection()->exec('CREATE TABLE foobar (name TEXT)');
         $result = $this->driver->explain('SELECT * FROM "foobar" WHERE "name" = ?', ["O'Brien"]);

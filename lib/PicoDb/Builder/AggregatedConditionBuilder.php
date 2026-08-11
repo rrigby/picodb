@@ -14,9 +14,6 @@ class AggregatedConditionBuilder extends BaseConditionBuilder implements Builder
 {
     /**
      * Constructor
-     *
-     * @access public
-     * @param  Database  $db
      */
     public function __construct(Database $db)
     {
@@ -25,11 +22,8 @@ class AggregatedConditionBuilder extends BaseConditionBuilder implements Builder
 
     /**
      * Build the SQL aggregated condition
-     *
-     * @access public
-     * @return string
      */
-    public function build()
+    public function build(): string
     {
         return empty($this->conditions) ? '' : ' HAVING '.implode(' AND ', $this->conditions);
     }

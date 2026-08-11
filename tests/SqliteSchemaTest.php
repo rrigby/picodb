@@ -1,25 +1,25 @@
 <?php
+use PHPUnit\Framework\TestCase;
+use PicoDb\Database;
+
 require_once __DIR__.'/SchemaFixture.php';
 
-class SqliteSchemaTest extends \PHPUnit\Framework\TestCase
+class SqliteSchemaTest extends TestCase
 {
-    /**
-     * @var PicoDb\Database
-     */
-    private $db;
+    private Database $db;
 
     public function setUp(): void
     {
-        $this->db = new PicoDb\Database(array('driver' => 'sqlite', 'filename' => ':memory:'));
+        $this->db = new Database(['driver' => 'sqlite', 'filename' => ':memory:']);
     }
 
-    public function testMigrations()
+    public function testMigrations(): void
     {
         $this->assertTrue($this->db->schema()->check(2));
         $this->assertEquals(2, $this->db->getDriver()->getSchemaVersion());
     }
 
-    public function testFailedMigrations()
+    public function testFailedMigrations(): void
     {
         $this->assertFalse($this->db->schema()->check(3));
         $this->assertEquals(2, $this->db->getDriver()->getSchemaVersion());

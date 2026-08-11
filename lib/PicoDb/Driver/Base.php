@@ -16,72 +16,49 @@ abstract class Base
 {
     /**
      * List of required settings options
-     *
-     * @access protected
      */
-    protected array $requiredAttributes = array();
+    protected array $requiredAttributes = [];
 
     /**
      * PDO connection
-     *
-     * @access private
      */
     private ?PDO $pdo = null;
 
     /**
      * Create a new PDO connection
-     *
-     * @abstract
-     * @access public
-     * @param  array   $settings
      */
-    abstract public function createConnection(array $settings);
+    abstract public function createConnection(array $settings): void;
 
     /**
      * Enable foreign keys
-     *
-     * @abstract
-     * @access public
      */
-    abstract public function enableForeignKeys();
+    abstract public function enableForeignKeys(): void;
 
     /**
      * Disable foreign keys
-     *
-     * @abstract
-     * @access public
      */
-    abstract public function disableForeignKeys();
+    abstract public function disableForeignKeys(): void;
 
     /**
      * Return true if the error code is a duplicate key
      *
-     * @abstract
-     * @access public
      * @param  integer  $code
-     * @return boolean
      */
-    abstract public function isDuplicateKeyError($code);
+    abstract public function isDuplicateKeyError($code): bool;
 
     /**
      * Escape identifier
      *
-     * @abstract
-     * @access public
      * @param  string  $identifier
-     * @return string
      */
-    abstract public function escape($identifier);
+    abstract public function escape($identifier): string;
 
     /**
      * Get non standard operator
      *
-     * @abstract
-     * @access public
      * @param  string  $operator
-     * @return string
      */
-    abstract public function getOperator($operator);
+    abstract public function getOperator($operator): string;
 
     /**
      * Build a JSON field equality condition
@@ -90,11 +67,9 @@ abstract class Base
      * The JSON path is embedded directly as a string literal.
      *
      * @abstract
-     * @access public
      * @param  string  $column    Escaped column identifier
      * @param  string  $path      JSONPath expression (e.g. '$.key' or '$.key1.key2')
      * @param  string  $operator  Comparison operator
-     * @return string
      */
     abstract public function buildJsonExtractCondition(string $column, string $path, string $operator): string;
 
@@ -107,7 +82,6 @@ abstract class Base
      * Returns [string $sql, array $bindings] — a complete condition with all bindings included.
      *
      * @abstract
-     * @access public
      * @param  string      $column  Escaped column identifier
      * @param  string|null $path    JSONPath expression, or null to target the column directly
      * @param  array       $values  The values that must all be present in the JSON array
@@ -119,33 +93,23 @@ abstract class Base
      * Get last inserted id
      *
      * @abstract
-     * @access public
      */
     abstract public function getLastId(): string|false;
 
     /**
      * Get current schema version
-     *
-     * @abstract
-     * @access public
-     * @return integer
      */
-    abstract public function getSchemaVersion();
+    abstract public function getSchemaVersion(): int;
 
     /**
      * Set current schema version
      *
-     * @abstract
-     * @access public
      * @param  integer  $version
      */
-    abstract public function setSchemaVersion($version);
+    abstract public function setSchemaVersion($version): void;
 
     /**
      * Constructor
-     *
-     * @access public
-     * @param  array   $settings
      */
     public function __construct(array $settings)
     {
@@ -162,12 +126,11 @@ abstract class Base
     /**
      * Get the PDO connection
      *
-     * @access public
      * @throws LogicException
      */
     public function getConnection(): PDO
     {
-        if ($this->pdo === null) {
+        if (!$this->pdo instanceof PDO) {
             throw new LogicException('The database connection is not established.');
         }
 
@@ -176,8 +139,6 @@ abstract class Base
 
     /**
      * Set the PDO connection
-     *
-     * @access protected
      */
     protected function setConnection(PDO $pdo): void
     {
@@ -186,10 +147,8 @@ abstract class Base
 
     /**
      * Release the PDO connection
-     *
-     * @access public
      */
-    public function closeConnection()
+    public function closeConnection(): void
     {
         $this->pdo = null;
     }
@@ -200,9 +159,8 @@ abstract class Base
      * @param int|null $limit
      * @param int|null $offset
      * @param string|null $order
-     * @return string
      */
-    public function getLimitClause($limit, $offset, $order)
+    public function getLimitClause($limit, $offset, $order): string
     {
         $clause = '';
 
@@ -220,14 +178,11 @@ abstract class Base
     /**
      * Upsert for a key/value variable
      *
-     * @access public
      * @param  string  $table
      * @param  string  $keyColumn
      * @param  string  $valueColumn
-     * @param  array   $dictionary
-     * @return bool    False on failure
      */
-    public function upsert($table, $keyColumn, $valueColumn, array $dictionary)
+    public function upsert($table, $keyColumn, $valueColumn, array $dictionary): bool
     {
         try {
             $this->getConnection()->beginTransaction();
@@ -235,15 +190,15 @@ abstract class Base
             foreach ($dictionary as $key => $value) {
 
                 $rq = $this->getConnection()->prepare('SELECT 1 FROM '.$this->escape($table).' WHERE '.$this->escape($keyColumn).'=?');
-                $rq->execute(array($key));
+                $rq->execute([$key]);
 
                 if ($rq->fetchColumn()) {
                     $rq = $this->getConnection()->prepare('UPDATE '.$this->escape($table).' SET '.$this->escape($valueColumn).'=? WHERE '.$this->escape($keyColumn).'=?');
-                    $rq->execute(array($value, $key));
+                    $rq->execute([$value, $key]);
                 }
                 else {
                     $rq = $this->getConnection()->prepare('INSERT INTO '.$this->escape($table).' ('.$this->escape($keyColumn).', '.$this->escape($valueColumn).') VALUES (?, ?)');
-                    $rq->execute(array($key, $value));
+                    $rq->execute([$key, $value]);
                 }
             }
 
@@ -251,7 +206,7 @@ abstract class Base
 
             return true;
         }
-        catch (PDOException $e) {
+        catch (PDOException) {
             $this->getConnection()->rollBack();
             return false;
         }
@@ -260,12 +215,9 @@ abstract class Base
     /**
      * Run EXPLAIN command
      *
-     * @access public
      * @param  string $sql
-     * @param  array  $values
-     * @return array
      */
-    public function explain($sql, array $values)
+    public function explain($sql, array $values): array
     {
         return $this->getConnection()->query('EXPLAIN '.$this->getSqlFromPreparedStatement($sql, $values))->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -273,12 +225,9 @@ abstract class Base
     /**
      * Replace placeholder with values in prepared statement
      *
-     * @access protected
      * @param  string $sql
-     * @param  array  $values
-     * @return string
      */
-    protected function getSqlFromPreparedStatement($sql, array $values)
+    protected function getSqlFromPreparedStatement($sql, array $values): string
     {
         foreach ($values as $value) {
             $pos = strpos($sql, '?');
@@ -294,11 +243,8 @@ abstract class Base
 
     /**
      * Get database version
-     *
-     * @access public
-     * @return array
      */
-    public function getDatabaseVersion()
+    public function getDatabaseVersion(): mixed
     {
         return $this->getConnection()->query('SELECT VERSION()')->fetchColumn();
     }

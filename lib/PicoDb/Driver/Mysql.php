@@ -16,7 +16,7 @@ class Mysql extends Base
     /**
      * List of required settings options
      *
-     * @access protected
+     * @var string[]
      */
     protected array $requiredAttributes = [
         'hostname',
@@ -27,18 +27,13 @@ class Mysql extends Base
 
     /**
      * Table to store the schema version
-     *
-     * @access private
      */
     private string $schemaTable = 'schema_version';
 
     /**
      * Create a new PDO connection
-     *
-     * @access public
-     * @param  array   $settings
      */
-    public function createConnection(array $settings)
+    public function createConnection(array $settings): void
     {
         $this->setConnection(new PDO(
             $this->buildDsn($settings),
@@ -55,11 +50,9 @@ class Mysql extends Base
     /**
      * Build connection DSN
      *
-     * @access protected
-     * @param  array $settings
-     * @return string
+     * @param array<string, mixed> $settings
      */
-    protected function buildDsn(array $settings)
+    protected function buildDsn(array $settings): string
     {
         $dsn = 'mysql:host='.$settings['hostname'].';dbname='.$settings['database'];
 
@@ -73,16 +66,15 @@ class Mysql extends Base
     /**
      * Build connection options
      *
-     * @access protected
-     * @param  array $settings
-     * @return array
+     * @return array<int, mixed>
+     * @param array<string, mixed> $settings
      */
-    protected function buildOptions(array $settings)
+    protected function buildOptions(array $settings): array
     {
         $charset = empty($settings['charset']) ? 'utf8' : $settings['charset'];
-        $options = array(
+        $options = [
             PDO::MYSQL_ATTR_INIT_COMMAND => 'SET sql_mode = STRICT_ALL_TABLES, NAMES ' . $charset,
-        );
+        ];
 
         if (! empty($settings['ssl_key'])) {
             $options[PDO::MYSQL_ATTR_SSL_KEY] = $settings['ssl_key'];
@@ -117,20 +109,16 @@ class Mysql extends Base
 
     /**
      * Enable foreign keys
-     *
-     * @access public
      */
-    public function enableForeignKeys()
+    public function enableForeignKeys(): void
     {
         $this->getConnection()->exec('SET FOREIGN_KEY_CHECKS=1');
     }
 
     /**
      * Disable foreign keys
-     *
-     * @access public
      */
-    public function disableForeignKeys()
+    public function disableForeignKeys(): void
     {
         $this->getConnection()->exec('SET FOREIGN_KEY_CHECKS=0');
     }
@@ -138,11 +126,9 @@ class Mysql extends Base
     /**
      * Return true if the error code is a duplicate key
      *
-     * @access public
      * @param  integer  $code
-     * @return boolean
      */
-    public function isDuplicateKeyError($code)
+    public function isDuplicateKeyError($code): bool
     {
         return $code == 23000;
     }
@@ -150,11 +136,9 @@ class Mysql extends Base
     /**
      * Escape identifier
      *
-     * @access public
      * @param  string  $identifier
-     * @return string
      */
-    public function escape($identifier)
+    public function escape($identifier): string
     {
         return '`'.$identifier.'`';
     }
@@ -162,16 +146,14 @@ class Mysql extends Base
     /**
      * Get non standard operator
      *
-     * @access public
      * @param  string  $operator
-     * @return string
      */
-    public function getOperator($operator)
+    public function getOperator($operator): string
     {
         if ($operator === 'LIKE') {
             return 'LIKE BINARY';
         }
-        else if ($operator === 'ILIKE') {
+        if ($operator === 'ILIKE') {
             return 'LIKE';
         }
 
@@ -196,8 +178,6 @@ class Mysql extends Base
 
     /**
      * Get last inserted id
-     *
-     * @access public
      */
     public function getLastId(): string|false
     {
@@ -206,11 +186,8 @@ class Mysql extends Base
 
     /**
      * Get current schema version
-     *
-     * @access public
-     * @return integer
      */
-    public function getSchemaVersion()
+    public function getSchemaVersion(): int
     {
         $this->getConnection()->exec("CREATE TABLE IF NOT EXISTS `".$this->schemaTable."` (`version` INT DEFAULT '0') ENGINE=InnoDB CHARSET=utf8");
 
@@ -221,9 +198,7 @@ class Mysql extends Base
         if ($result !== false) {
             return (int) $result;
         }
-        else {
-            $this->getConnection()->exec('INSERT INTO `'.$this->schemaTable.'` VALUES(0)');
-        }
+        $this->getConnection()->exec('INSERT INTO `'.$this->schemaTable.'` VALUES(0)');
 
         return 0;
     }
@@ -231,26 +206,23 @@ class Mysql extends Base
     /**
      * Set current schema version
      *
-     * @access public
      * @param  integer  $version
      */
-    public function setSchemaVersion($version)
+    public function setSchemaVersion($version): void
     {
         $rq = $this->getConnection()->prepare('UPDATE `'.$this->schemaTable.'` SET `version`=?');
-        $rq->execute(array($version));
+        $rq->execute([$version]);
     }
 
     /**
      * Upsert for a key/value variable
      *
-     * @access public
      * @param  string  $table
      * @param  string  $keyColumn
      * @param  string  $valueColumn
-     * @param  array   $dictionary
      * @return bool    False on failure
      */
-    public function upsert($table, $keyColumn, $valueColumn, array $dictionary)
+    public function upsert($table, $keyColumn, $valueColumn, array $dictionary): bool
     {
         try {
 
@@ -262,7 +234,7 @@ class Mysql extends Base
                 implode(', ', array_fill(0, count($dictionary), '(?, ?)'))
             );
 
-            $values = array();
+            $values = [];
 
             foreach ($dictionary as $key => $value) {
                 $values[] = $key;
@@ -274,7 +246,7 @@ class Mysql extends Base
 
             return true;
         }
-        catch (PDOException $e) {
+        catch (PDOException) {
             return false;
         }
     }

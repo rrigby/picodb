@@ -56,208 +56,118 @@ class Table
     /**
      * Sorting direction
      *
-     * @access public
      * @var string
      */
     const SORT_ASC = 'ASC';
     const SORT_DESC = 'DESC';
 
-    /**
-     * Condition instance
-     *
-     * @access protected
-     * @var    ConditionBuilder
-     */
-    protected $conditionBuilder;
+    protected ConditionBuilder $conditionBuilder;
 
-    /**
-     * Aggregated Condition instance
-     *
-     * @access protected
-     * @var    AggregatedConditionBuilder
-     */
-    protected $aggregatedConditionBuilder;
-
-    /**
-     * Database instance
-     *
-     * @access protected
-     * @var    Database
-     */
-    protected $db;
-
-    /**
-     * Table name
-     *
-     * @access protected
-     * @var    string
-     */
-    protected $name = '';
+    protected AggregatedConditionBuilder $aggregatedConditionBuilder;
 
     /**
      * Columns list for SELECT query
      *
-     * @access private
-     * @var    array
+     * @var string[]
      */
-    private $columns = array();
+    private array $columns = [];
 
-    /**
-     * Columns to sum during update
-     *
-     * @access private
-     * @var    array
-     */
-    private $sumColumns = array();
+    private array $sumColumns = [];
 
     /**
      * SQL limit
-     *
-     * @access private
-     * @var    int|null
      */
-    private $sqlLimit = null;
+    private ?int $sqlLimit = null;
 
     /**
      * SQL offset
-     *
-     * @access private
-     * @var    int|null
      */
-    private $sqlOffset = null;
+    private ?int $sqlOffset = null;
 
     /**
      * SQL order
-     *
-     * @access private
-     * @var    string
      */
-    private $sqlOrder = '';
+    private string $sqlOrder = '';
 
-    /**
-     * SQL custom SELECT value
-     *
-     * @access private
-     * @var    string
-     */
-    private $sqlSelect = '';
+    private string $sqlSelect = '';
 
     /**
      * SQL joins
      *
-     * @access private
-     * @var    array
+     * @var string[]
      */
-    private $joins = array();
+    private array $joins = [];
 
     /**
-     * Values for subqueries used in joins
-     *
-     * @access private
-     * @var array
+     * @var mixed[]
      */
-    private $joinValues = array();
+    private array $joinValues = [];
 
     /**
      * Use DISTINCT or not?
-     *
-     * @access private
-     * @var    boolean
      */
-    private $distinct = false;
+    private bool $distinct = false;
 
     /**
      * Group by those columns
-     *
-     * @access private
-     * @var    array
      */
-    private $groupBy = array();
+    private array $groupBy = [];
 
     /**
      * Flag to use the AggregateConditionBuilder (HAVING) or ConditionBuilder (WHERE)
-     *
-     * @access private
-     * @var    string
      */
-    private $conditionalBuilder = 'WHERE';
+    private string $conditionalBuilder = 'WHERE';
 
     /**
      * Callback for result filtering
-     *
-     * @access private
-     * @var    Closure|null
      */
-    private $callback = null;
+    private ?Closure $callback = null;
 
     /**
      * Constructor
-     *
-     * @access public
-     * @param  Database   $db
-     * @param  string     $name
      */
-    public function __construct(Database $db, $name)
+    public function __construct(protected Database $db, protected string $name)
     {
-        $this->db = $db;
-        $this->name = $name;
-        $this->conditionBuilder = new ConditionBuilder($db);
-        $this->aggregatedConditionBuilder = new AggregatedConditionBuilder($db);
+        $this->conditionBuilder = new ConditionBuilder($this->db);
+        $this->aggregatedConditionBuilder = new AggregatedConditionBuilder($this->db);
     }
 
     /**
      * Return the table name
-     *
-     * @access public
-     * @return string
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
 
     /**
      * Return ConditionBuilder object
-     *
-     * @access public
-     * @return ConditionBuilder
      */
-    public function getConditionBuilder()
+    public function getConditionBuilder(): ConditionBuilder
     {
         return $this->conditionBuilder;
     }
 
     /**
      * Return AggregatedConditionBuilder object
-     *
-     * @access public
-     * @return AggregatedConditionBuilder
      */
-    public function getAggregatedConditionBuilder()
+    public function getAggregatedConditionBuilder(): AggregatedConditionBuilder
     {
         return $this->aggregatedConditionBuilder;
     }
 
     /**
      * Insert or update
-     *
-     * @access public
-     * @param  array    $data
-     * @return boolean
      */
-    public function save(array $data)
+    public function save(array $data): bool
     {
         return $this->conditionBuilder->hasCondition() ? $this->update($data) : $this->insert($data);
     }
 
     /**
      * Update
-     *
-     * @access public
-     * @param  array   $data
-     * @return boolean
      */
-    public function update(array $data = array())
+    public function update(array $data = []): bool
     {
         $values = array_merge(array_values($data), array_values($this->sumColumns), $this->conditionBuilder->getValues());
         $sql = UpdateBuilder::getInstance($this->db, $this->conditionBuilder)
@@ -266,36 +176,30 @@ class Table
             ->withSumColumns(array_keys($this->sumColumns))
             ->build();
 
-        return $this->db->execute($sql, $values) !== false;
+        $this->db->execute($sql, $values);
+        return true;
     }
 
     /**
      * Insert
-     *
-     * @access public
-     * @param  array    $data
-     * @return boolean
      */
-    public function insert(array $data)
+    public function insert(array $data): bool
     {
-        return $this->db->getStatementHandler()
+        $this->db->getStatementHandler()
             ->withSql(InsertBuilder::getInstance($this->db, $this->conditionBuilder)
                 ->withTable($this->name)
                 ->withColumns(array_keys($data))
                 ->build()
             )
             ->withNamedParams($data)
-            ->execute() !== false;
+            ->execute();
+        return true;
     }
 
     /**
      * Insert a new row and return the ID of the primary key
-     *
-     * @access public
-     * @param  array $data
-     * @return bool|int
      */
-    public function persist(array $data)
+    public function persist(array $data): int|false
     {
         if ($this->insert($data)) {
             return $this->db->getLastId();
@@ -306,11 +210,8 @@ class Table
 
     /**
      * Remove
-     *
-     * @access public
-     * @return boolean
      */
-    public function remove()
+    public function remove(): bool
     {
         $sql = sprintf(
             'DELETE FROM %s %s',
@@ -324,11 +225,8 @@ class Table
 
     /**
      * Fetch all rows
-     *
-     * @access public
-     * @return array
      */
-    public function findAll()
+    public function findAll(): array
     {
         $rq = $this->db->execute($this->buildSelectQuery(), $this->getValues());
         $results = $rq->fetchAll(PDO::FETCH_ASSOC);
@@ -343,13 +241,11 @@ class Table
     /**
      * Find all with a single column
      *
-     * @access public
      * @param  string    $column
-     * @return mixed
      */
-    public function findAllByColumn($column)
+    public function findAllByColumn($column): array
     {
-        $this->columns = array($column);
+        $this->columns = [$column];
         $rq = $this->db->execute($this->buildSelectQuery(), $this->getValues());
 
         return $rq->fetchAll(PDO::FETCH_COLUMN, 0);
@@ -357,29 +253,25 @@ class Table
 
     /**
      * Fetch one row
-     *
-     * @access public
-     * @return array|null
      */
-    public function findOne()
+    public function findOne(): ?array
     {
         $this->limit(1);
         $result = $this->findAll();
 
-        return isset($result[0]) ? $result[0] : null;
+        return $result[0] ?? null;
     }
 
     /**
      * Fetch one column, first row
      *
-     * @access public
      * @param  string   $column
      * @return string|bool returns false if there are 0 results to get a column from.
      */
-    public function findOneColumn($column)
+    public function findOneColumn($column): string|int|null|false
     {
         $this->limit(1);
-        $this->columns = array($column);
+        $this->columns = [$column];
 
         return $this->db->execute($this->buildSelectQuery(), $this->getValues())->fetchColumn();
     }
@@ -387,12 +279,10 @@ class Table
     /**
      * Build a subquery with an alias
      *
-     * @access public
      * @param  string  $sql
      * @param  string  $alias
-     * @return $this
      */
-    public function subquery($sql, $alias)
+    public function subquery($sql, $alias): static
     {
         $this->columns[] = '('.$sql.') AS '.$this->db->escapeIdentifier($alias);
         return $this;
@@ -400,18 +290,15 @@ class Table
 
     /**
      * Exists
-     *
-     * @access public
-     * @return bool
      */
-    public function exists()
+    public function exists(): bool
     {
         $sql = sprintf(
             'SELECT 1 FROM %s %s %s %s %s %s %s',
             $this->db->escapeIdentifier($this->name),
             implode(' ', $this->joins),
             $this->conditionBuilder->build(),
-            empty($this->groupBy) ? '' : 'GROUP BY '.implode(', ', $this->groupBy),
+            $this->groupBy === [] ? '' : 'GROUP BY '.implode(', ', $this->groupBy),
             $this->aggregatedConditionBuilder->build(),
             $this->sqlOrder,
             $this->db->getDriver()->getLimitClause(
@@ -424,19 +311,15 @@ class Table
         $rq = $this->db->execute($sql,  $this->getValues());
         $result = $rq->fetchColumn();
 
-        return $result ? true : false;
+        return (bool) $result;
     }
 
     /**
      * Count
-     *
-     * @access public
-     * @param string $column
-     * @return integer
      */
-    public function count(string $column = '*')
+    public function count(string $column = '*'): int
     {
-        if ($column != '*') {
+        if ($column !== '*') {
             $column = ($this->distinct ? 'DISTINCT ' : '') . $this->db->escapeIdentifier($column);
         }
 
@@ -446,7 +329,7 @@ class Table
             $this->db->escapeIdentifier($this->name),
             implode(' ', $this->joins),
             $this->conditionBuilder->build(),
-            empty($this->groupBy) ? '' : 'GROUP BY '.implode(', ', $this->groupBy),
+            $this->groupBy === [] ? '' : 'GROUP BY '.implode(', ', $this->groupBy),
             $this->aggregatedConditionBuilder->build(),
             $this->sqlOrder,
             $this->db->getDriver()->getLimitClause(
@@ -465,11 +348,9 @@ class Table
     /**
      * Sum
      *
-     * @access public
-     * @param string $column
      * @return float
      */
-    public function sum(string $column)
+    public function sum(string $column): float|int
     {
         $sql = sprintf(
             'SELECT SUM(%s) FROM %s %s %s %s %s %s %s',
@@ -477,7 +358,7 @@ class Table
             $this->db->escapeIdentifier($this->name),
             implode(' ', $this->joins),
             $this->conditionBuilder->build(),
-            empty($this->groupBy) ? '' : 'GROUP BY '.implode(', ', $this->groupBy),
+            $this->groupBy === [] ? '' : 'GROUP BY '.implode(', ', $this->groupBy),
             $this->aggregatedConditionBuilder->build(),
             $this->sqlOrder,
             $this->db->getDriver()->getLimitClause(
@@ -496,12 +377,10 @@ class Table
     /**
      * Increment column value
      *
-     * @access public
      * @param  string $column
      * @param  string $value
-     * @return boolean
      */
-    public function increment($column, $value)
+    public function increment($column, $value): bool
     {
         $sql = sprintf(
             'UPDATE %s SET %s=%s+%d '.$this->conditionBuilder->build(),
@@ -511,18 +390,17 @@ class Table
             $value
         );
 
-        return $this->db->execute($sql, $this->conditionBuilder->getValues()) !== false;
+        $this->db->execute($sql, $this->conditionBuilder->getValues());
+        return true;
     }
 
     /**
      * Decrement column value
      *
-     * @access public
      * @param  string $column
      * @param  string $value
-     * @return boolean
      */
-    public function decrement($column, $value)
+    public function decrement($column, $value): bool
     {
         $sql = sprintf(
             'UPDATE %s SET %s=%s-%d '.$this->conditionBuilder->build(),
@@ -532,21 +410,20 @@ class Table
             $value
         );
 
-        return $this->db->execute($sql, $this->conditionBuilder->getValues()) !== false;
+        $this->db->execute($sql, $this->conditionBuilder->getValues());
+        return true;
     }
 
     /**
      * Left join
      *
-     * @access public
      * @param  string   $table              Join table
      * @param  string   $foreign_column     Foreign key on the join table
      * @param  string   $local_column       Local column
      * @param  string   $local_table        Local table
      * @param  string   $alias              Join table alias
-     * @return $this
      */
-    public function join($table, $foreign_column, $local_column, $local_table = '', $alias = '')
+    public function join($table, $foreign_column, $local_column, $local_table = '', $alias = ''): static
     {
         $this->joins[] = sprintf(
             'LEFT JOIN %s ON %s=%s',
@@ -561,16 +438,14 @@ class Table
     /**
      * Left join
      *
-     * @access public
      * @param  string   $table1
      * @param  string   $alias1
      * @param  string   $column1
      * @param  string   $table2
      * @param  string   $column2
      * @param  array    $conditions
-     * @return $this
      */
-    public function left($table1, $alias1, $column1, $table2, $column2, $conditions = [])
+    public function left($table1, $alias1, $column1, $table2, $column2, $conditions = []): static
     {
         $where = '';
         foreach ($conditions as $column => $value) {
@@ -600,16 +475,13 @@ class Table
     /**
      * Inner join
      *
-     * @access public
      * @param  string   $table1
      * @param  string   $alias1
      * @param  string   $column1
      * @param  string   $table2
      * @param  string   $column2
-     * @param  array    $conditions
-     * @return $this
      */
-    public function inner($table1, $alias1, $column1, $table2, $column2, array $conditions = [])
+    public function inner($table1, $alias1, $column1, $table2, $column2, array $conditions = []): static
     {
         $where = '';
         foreach ($conditions as $column => $value) {
@@ -638,13 +510,6 @@ class Table
 
     /**
      * Join your table onto a subquery.
-     *
-     * @param Table $subQuery
-     * @param string $alias
-     * @param string $foreign_column
-     * @param string $local_column
-     * @param string $local_table
-     * @return Table
      */
     public function joinSubquery(Table $subQuery, string $alias, string $foreign_column, string $local_column, string $local_table = ''): Table
     {
@@ -666,13 +531,6 @@ class Table
 
     /**
      * Inner Join your table onto a subquery.
-     *
-     * @param Table $subQuery
-     * @param string $alias
-     * @param string $foreign_column
-     * @param string $local_column
-     * @param string $local_table
-     * @return Table
      */
     public function innerJoinSubquery(Table $subQuery, string $alias, string $foreign_column, string $local_column, string $local_table = ''): Table
     {
@@ -695,12 +553,10 @@ class Table
     /**
      * Order by
      *
-     * @access public
      * @param  string   $column    Column name
      * @param  string   $order     Direction ASC or DESC
-     * @return $this
      */
-    public function orderBy($column, $order = self::SORT_ASC)
+    public function orderBy($column, $order = self::SORT_ASC): static
     {
         $order = strtoupper($order);
         $order = $order === self::SORT_ASC || $order === self::SORT_DESC ? $order : self::SORT_ASC;
@@ -718,11 +574,9 @@ class Table
     /**
      * Ascending sort
      *
-     * @access public
      * @param  string   $column
-     * @return $this
      */
-    public function asc($column)
+    public function asc($column): static
     {
         $this->orderBy($column, self::SORT_ASC);
         return $this;
@@ -731,11 +585,9 @@ class Table
     /**
      * Descending sort
      *
-     * @access public
      * @param  string   $column
-     * @return $this
      */
-    public function desc($column)
+    public function desc($column): static
     {
         $this->orderBy($column, self::SORT_DESC);
         return $this;
@@ -744,11 +596,9 @@ class Table
     /**
      * Limit
      *
-     * @access public
      * @param  integer   $value
-     * @return $this
      */
-    public function limit($value)
+    public function limit($value): static
     {
         if (! is_null($value)) {
             $this->sqlLimit = (int) $value;
@@ -760,11 +610,9 @@ class Table
     /**
      * Offset
      *
-     * @access public
      * @param  integer   $value
-     * @return $this
      */
-    public function offset($value)
+    public function offset($value): static
     {
         if (! is_null($value)) {
             $this->sqlOffset = (int) $value;
@@ -777,9 +625,8 @@ class Table
      * Group By
      *
      * @param string ...$columns
-     * @return $this
      */
-    public function groupBy(...$columns)
+    public function groupBy(...$columns): static
     {
         $this->groupBy = $columns;
         return $this;
@@ -787,12 +634,8 @@ class Table
 
     /**
      * Custom select
-     *
-     * @access public
-     * @param  string $select
-     * @return $this
      */
-    public function select($select)
+    public function select(string $select): static
     {
         $this->sqlSelect = $select;
         return $this;
@@ -800,11 +643,8 @@ class Table
 
     /**
      * Define the columns for the select
-     *
-     * @access public
-     * @return $this
      */
-    public function columns()
+    public function columns(): static
     {
         $this->columns = func_get_args();
         return $this;
@@ -813,12 +653,10 @@ class Table
     /**
      * Sum column
      *
-     * @access public
      * @param  string  $column
      * @param  mixed   $value
-     * @return $this
      */
-    public function sumColumn($column, $value)
+    public function sumColumn($column, $value): static
     {
         $this->sumColumns[$column] = $value;
         return $this;
@@ -826,11 +664,8 @@ class Table
 
     /**
      * Distinct
-     *
-     * @access public
-     * @return $this
      */
-    public function distinct()
+    public function distinct(): static
     {
         $this->columns = func_get_args();
         $this->distinct = true;
@@ -839,12 +674,8 @@ class Table
 
     /**
      * Add callback to alter the resultset
-     *
-     * @access public
-     * @param  callable  $callback
-     * @return $this
      */
-    public function callback($callback)
+    public function callback(callable $callback): static
     {
         $this->callback = Closure::fromCallable($callback);
         return $this;
@@ -852,15 +683,12 @@ class Table
 
     /**
      * Build a select query
-     *
-     * @access public
-     * @return string
      */
-    public function buildSelectQuery()
+    public function buildSelectQuery(): string
     {
-        if (empty($this->sqlSelect)) {
+        if ($this->sqlSelect === '' || $this->sqlSelect === '0') {
             $this->columns = $this->db->escapeIdentifierList($this->columns);
-            $this->sqlSelect = ($this->distinct ? 'DISTINCT ' : '').(empty($this->columns) ? '*' : implode(', ', $this->columns));
+            $this->sqlSelect = ($this->distinct ? 'DISTINCT ' : '').($this->columns === [] ? '*' : implode(', ', $this->columns));
         }
 
         $groupBy = $this->db->escapeIdentifierList($this->groupBy);
@@ -882,7 +710,7 @@ class Table
             $this->db->escapeIdentifier($this->name),
             implode(' ', $this->joins),
             $this->conditionBuilder->build(),
-            empty($groupBy) ? '' : 'GROUP BY '.implode(', ', $groupBy),
+            $groupBy === [] ? '' : 'GROUP BY '.implode(', ', $groupBy),
             $this->aggregatedConditionBuilder->build(),
             $this->sqlOrder,
             $this->db->getDriver()->getLimitClause(
@@ -895,10 +723,8 @@ class Table
 
     /**
      * Sets the conditionalBuilder flag to use AggregateConditionBuilder (HAVING)
-     *
-     * @return $this
      */
-    public function having()
+    public function having(): static
     {
         $this->conditionalBuilder = 'HAVING';
         return $this;
@@ -906,10 +732,8 @@ class Table
 
     /**
      * Sets the conditionalBuilder flag to use ConditionBuilder (WHERE)
-     *
-     * @return $this
      */
-    public function where()
+    public function where(): static
     {
         $this->conditionalBuilder = 'WHERE';
         return $this;
@@ -918,13 +742,8 @@ class Table
     /**
      * Executes the provided callback if the condition is true
      * Otherwise, executes the default callback, if provided
-     *
-     * @param bool         $condition
-     * @param Closure      $callback
-     * @param Closure|null $default
-     * @return $this
      */
-    public function when(bool $condition, Closure $callback, ?Closure $default = null)
+    public function when(bool $condition, Closure $callback, ?Closure $default = null): static
     {
         if ($condition) {
             $callback($this);
@@ -993,18 +812,13 @@ class Table
 
     /**
      * Magic method for sql conditions
-     *
-     * @access public
-     * @param  string   $name
-     * @param  array    $arguments
-     * @return $this
      */
-    public function __call($name, array $arguments)
+    public function __call(string $name, array $arguments): static
     {
         if ($this->conditionalBuilder === 'HAVING') {
-            call_user_func_array(array($this->aggregatedConditionBuilder, $name), $arguments);
+            call_user_func_array([$this->aggregatedConditionBuilder, $name], $arguments);
         } else {
-            call_user_func_array(array($this->conditionBuilder, $name), $arguments);
+            call_user_func_array([$this->conditionBuilder, $name], $arguments);
         }
 
         return $this;
@@ -1021,10 +835,8 @@ class Table
 
     /**
      * Values used to construct a select query
-     *
-     * @return array
      */
-    public function getValues()
+    public function getValues(): array
     {
         return array_merge(
             $this->joinValues,

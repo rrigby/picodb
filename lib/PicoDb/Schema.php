@@ -12,41 +12,24 @@ use PDOException;
  */
 class Schema
 {
-    /**
-     * Database instance
-     *
-     * @access protected
-     * @var Database
-     */
-    protected $db;
-
-    /**
-     * Schema namespace
-     *
-     * @access protected
-     * @var string
-     */
-    protected $namespace = '\Schema';
+    protected string $namespace = '\Schema';
 
     /**
      * Constructor
-     *
-     * @access public
-     * @param  Database  $db
      */
-    public function __construct(Database $db)
+    public function __construct(
+        /**
+         * Database instance
+         */
+        protected Database $db
+    )
     {
-        $this->db = $db;
     }
 
     /**
      * Set another namespace
-     *
-     * @access public
-     * @param  string $namespace
-     * @return Schema
      */
-    public function setNamespace($namespace)
+    public function setNamespace(string $namespace): static
     {
         $this->namespace = $namespace;
         return $this;
@@ -54,11 +37,8 @@ class Schema
 
     /**
      * Get schema namespace
-     *
-     * @access public
-     * @return string
      */
-    public function getNamespace()
+    public function getNamespace(): string
     {
         return $this->namespace;
     }
@@ -66,11 +46,9 @@ class Schema
     /**
      * Check the schema version and run the migrations
      *
-     * @access public
      * @param  integer  $last_version
-     * @return boolean
      */
-    public function check($last_version = 1)
+    public function check($last_version = 1): bool
     {
         $current_version = $this->db->getDriver()->getSchemaVersion();
 
@@ -84,12 +62,10 @@ class Schema
     /**
      * Migrate the schema to one version to another
      *
-     * @access public
      * @param  integer  $current_version
      * @param  integer  $next_version
-     * @return boolean
      */
-    public function migrateTo($current_version, $next_version)
+    public function migrateTo($current_version, $next_version): bool
     {
         try {
             for ($i = $current_version + 1; $i <= $next_version; $i++) {

@@ -15,128 +15,75 @@ use PDOStatement;
 class StatementHandler
 {
     /**
-     * Database instance
-     *
-     * @access protected
-     * @var Database
-     */
-    protected $db;
-
-    /**
      * Flag to calculate query time
-     *
-     * @access protected
-     * @var boolean
      */
-    protected $stopwatch = false;
+    protected bool $stopwatch = false;
 
-    /**
-     * Start time
-     *
-     * @access protected
-     * @var float
-     */
-    protected $startTime = 0;
+    protected float $startTime = 0;
 
     /**
      * Execution time of all queries
-     *
-     * @access protected
-     * @var float
      */
-    protected $executionTime = 0;
+    protected float $executionTime = 0;
 
     /**
      * Flag to log generated SQL queries
-     *
-     * @access protected
-     * @var boolean
      */
-    protected $logQueries = false;
+    protected bool $logQueries = false;
 
     /**
      * Flag to combine values in the logged SQL queries.
-     *
-     * @access protected
-     * @var boolean
      */
-    protected $logQueryValues = false;
+    protected bool $logQueryValues = false;
 
     /**
      * Run explain command on each query
-     *
-     * @access protected
-     * @var boolean
      */
-    protected $explain = false;
+    protected bool $explain = false;
 
     /**
      * Number of SQL queries executed
-     *
-     * @access protected
-     * @var integer
      */
-    protected $nbQueries = 0;
+    protected int $nbQueries = 0;
 
-    /**
-     * SQL query
-     *
-     * @access protected
-     * @var string
-     */
-    protected $sql = '';
+    protected string $sql = '';
 
     /**
      * Positional SQL parameters
-     *
-     * @access protected
-     * @var array
      */
-    protected $positionalParams = array();
+    protected array $positionalParams = [];
 
     /**
      * Named SQL parameters
-     *
-     * @access protected
-     * @var array
      */
-    protected $namedParams = array();
+    protected array $namedParams = [];
 
     /**
      * Flag to use named params
-     *
-     * @access protected
-     * @var boolean
      */
-    protected $useNamedParams = false;
+    protected bool $useNamedParams = false;
 
     /**
      * LOB params
-     *
-     * @access protected
-     * @var array
      */
-    protected $lobParams = array();
+    protected array $lobParams = [];
 
     /**
      * Constructor
-     *
-     * @access public
-     * @param  Database $db
      */
-    public function __construct(Database $db)
+    public function __construct(
+        /**
+         * Database instance
+         */
+        protected Database $db
+    )
     {
-        $this->db = $db;
     }
 
     /**
      * Enable query logging
-     *
-     * @access public
-     * @param bool $includeValues
-     * @return $this
      */
-    public function withLogging(bool $includeValues = false)
+    public function withLogging(bool $includeValues = false): static
     {
         $this->logQueryValues = $includeValues;
         $this->logQueries = true;
@@ -145,11 +92,8 @@ class StatementHandler
 
     /**
      * Record query execution time
-     *
-     * @access public
-     * @return $this
      */
-    public function withStopWatch()
+    public function withStopWatch(): static
     {
         $this->stopwatch = true;
         return $this;
@@ -157,11 +101,8 @@ class StatementHandler
 
     /**
      * Execute explain command on query
-     *
-     * @access public
-     * @return $this
      */
-    public function withExplain()
+    public function withExplain(): static
     {
         $this->explain = true;
         return $this;
@@ -169,12 +110,8 @@ class StatementHandler
 
     /**
      * Set SQL query
-     *
-     * @access public
-     * @param  string  $sql
-     * @return $this
      */
-    public function withSql($sql)
+    public function withSql(string $sql): static
     {
         $this->sql = $sql;
         return $this;
@@ -182,12 +119,8 @@ class StatementHandler
 
     /**
      * Set positional parameters
-     *
-     * @access public
-     * @param  array $params
-     * @return $this
      */
-    public function withPositionalParams(array $params)
+    public function withPositionalParams(array $params): static
     {
         $this->positionalParams = $params;
         return $this;
@@ -195,12 +128,8 @@ class StatementHandler
 
     /**
      * Set named parameters
-     *
-     * @access public
-     * @param  array $params
-     * @return $this
      */
-    public function withNamedParams(array $params)
+    public function withNamedParams(array $params): static
     {
         $this->namedParams = $params;
         $this->useNamedParams = true;
@@ -210,12 +139,10 @@ class StatementHandler
     /**
      * Bind large object parameter
      *
-     * @access public
      * @param $name
      * @param $fp
-     * @return $this
      */
-    public function withLobParam($name, &$fp)
+    public function withLobParam($name, &$fp): static
     {
         $this->lobParams[$name] =& $fp;
         return $this;
@@ -223,11 +150,8 @@ class StatementHandler
 
     /**
      * Get number of queries executed
-     *
-     * @access public
-     * @return int
      */
-    public function getNbQueries()
+    public function getNbQueries(): int
     {
         return $this->nbQueries;
     }
@@ -235,11 +159,9 @@ class StatementHandler
     /**
      * Execute a prepared statement
      *
-     * @access public
-     * @return PDOStatement
      * @throws SQLException
      */
-    public function execute()
+    public function execute(): PDOStatement
     {
         try {
             $this->beforeExecute();
@@ -263,11 +185,8 @@ class StatementHandler
 
     /**
      * Bind parameters to PDOStatement
-     *
-     * @access protected
-     * @param PDOStatement $pdoStatement
      */
-    protected function bindParams(PDOStatement $pdoStatement)
+    protected function bindParams(PDOStatement $pdoStatement): void
     {
         $i = 1;
 
@@ -294,10 +213,8 @@ class StatementHandler
 
     /**
      * Method executed before query execution
-     *
-     * @access protected
      */
-    protected function beforeExecute()
+    protected function beforeExecute(): void
     {
         if ($this->logQueries) {
             $sql = $this->sql;
@@ -305,14 +222,14 @@ class StatementHandler
                 $params = $this->lobParams ?: $this->positionalParams ?: $this->namedParams;
 
                 if ($this->useNamedParams) {
-                    $sql = preg_replace_callback('/:([a-zA-Z0-9_]+)/', function ($matches) use ($params) {
+                    $sql = preg_replace_callback('/:([a-zA-Z0-9_]+)/', function (array $matches) use ($params): string {
                         $paramName = $matches[1];
                         $replacement = $params[$paramName] ?? $matches[0];
                         return "'$replacement'";
                     }, $sql);
                 } else {
                     $i = 0;
-                    $sql = preg_replace_callback('/\?/', function($matches) use ($params, &$i) {
+                    $sql = preg_replace_callback('/\?/', function($matches) use ($params, &$i): string {
                         $replacement = $params[$i] ?? '';
                         $i++;
                         return "'$replacement'";
@@ -329,10 +246,8 @@ class StatementHandler
 
     /**
      * Method executed after query execution
-     *
-     * @access protected
      */
-    protected function afterExecute()
+    protected function afterExecute(): void
     {
         if ($this->stopwatch) {
             $duration = microtime(true) - $this->startTime;
@@ -352,27 +267,23 @@ class StatementHandler
     /**
      * Reset internal properties after execution
      * The same object instance is used
-     *
-     * @access protected
      */
-    protected function cleanup()
+    protected function cleanup(): void
     {
         $this->sql = '';
         $this->useNamedParams = false;
-        $this->positionalParams = array();
-        $this->namedParams = array();
-        $this->lobParams = array();
+        $this->positionalParams = [];
+        $this->namedParams = [];
+        $this->lobParams = [];
     }
 
     /**
      * Handle PDOException
      *
-     * @access public
-     * @param  PDOException $e
      * @return never
      * @throws SQLException
      */
-    public function handleSqlError(PDOException $e)
+    public function handleSqlError(PDOException $e): void
     {
         $this->cleanup();
         $this->db->cancelTransaction();

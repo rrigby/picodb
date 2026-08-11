@@ -16,19 +16,16 @@ class Sqlite extends Base
     /**
      * List of required settings options
      *
-     * @access protected
+     * @var string[]
      */
     protected array $requiredAttributes = ['filename'];
 
     /**
      * Create a new PDO connection
-     *
-     * @access public
-     * @param  array   $settings
      */
-    public function createConnection(array $settings)
+    public function createConnection(array $settings): void
     {
-        $options = array();
+        $options = [];
 
         if (! empty($settings['timeout'])) {
             $options[PDO::ATTR_TIMEOUT] = $settings['timeout'];
@@ -40,20 +37,16 @@ class Sqlite extends Base
 
     /**
      * Enable foreign keys
-     *
-     * @access public
      */
-    public function enableForeignKeys()
+    public function enableForeignKeys(): void
     {
         $this->getConnection()->exec('PRAGMA foreign_keys = ON');
     }
 
     /**
      * Disable foreign keys
-     *
-     * @access public
      */
-    public function disableForeignKeys()
+    public function disableForeignKeys(): void
     {
         $this->getConnection()->exec('PRAGMA foreign_keys = OFF');
     }
@@ -61,11 +54,9 @@ class Sqlite extends Base
     /**
      * Return true if the error code is a duplicate key
      *
-     * @access public
      * @param  integer  $code
-     * @return boolean
      */
-    public function isDuplicateKeyError($code)
+    public function isDuplicateKeyError($code): bool
     {
         return $code == 23000;
     }
@@ -73,11 +64,9 @@ class Sqlite extends Base
     /**
      * Escape identifier
      *
-     * @access public
      * @param  string  $identifier
-     * @return string
      */
-    public function escape($identifier)
+    public function escape($identifier): string
     {
         return '"'.$identifier.'"';
     }
@@ -85,11 +74,9 @@ class Sqlite extends Base
     /**
      * Get non standard operator
      *
-     * @access public
      * @param  string  $operator
-     * @return string
      */
-    public function getOperator($operator)
+    public function getOperator($operator): string
     {
         if ($operator === 'LIKE' || $operator === 'ILIKE') {
             return 'LIKE';
@@ -115,8 +102,6 @@ class Sqlite extends Base
 
     /**
      * Get last inserted id
-     *
-     * @access public
      */
     public function getLastId(): string|false
     {
@@ -125,11 +110,8 @@ class Sqlite extends Base
 
     /**
      * Get current schema version
-     *
-     * @access public
-     * @return integer
      */
-    public function getSchemaVersion()
+    public function getSchemaVersion(): int
     {
         $rq = $this->getConnection()->prepare('PRAGMA user_version');
         $rq->execute();
@@ -140,10 +122,9 @@ class Sqlite extends Base
     /**
      * Set current schema version
      *
-     * @access public
      * @param  integer  $version
      */
-    public function setSchemaVersion($version)
+    public function setSchemaVersion($version): void
     {
         $this->getConnection()->exec('PRAGMA user_version='.$version);
     }
@@ -151,14 +132,12 @@ class Sqlite extends Base
     /**
      * Upsert for a key/value variable
      *
-     * @access public
      * @param  string  $table
      * @param  string  $keyColumn
      * @param  string  $valueColumn
-     * @param  array   $dictionary
      * @return bool    False on failure
      */
-    public function upsert($table, $keyColumn, $valueColumn, array $dictionary)
+    public function upsert($table, $keyColumn, $valueColumn, array $dictionary): bool
     {
         try {
             $this->getConnection()->beginTransaction();
@@ -173,14 +152,14 @@ class Sqlite extends Base
                 );
 
                 $rq = $this->getConnection()->prepare($sql);
-                $rq->execute(array($key, $value));
+                $rq->execute([$key, $value]);
             }
 
             $this->getConnection()->commit();
 
             return true;
         }
-        catch (PDOException $e) {
+        catch (PDOException) {
             $this->getConnection()->rollBack();
             return false;
         }
@@ -189,23 +168,17 @@ class Sqlite extends Base
     /**
      * Run EXPLAIN command
      *
-     * @access public
      * @param  string $sql
-     * @param  array  $values
-     * @return array
      */
-    public function explain($sql, array $values)
+    public function explain($sql, array $values): array
     {
         return $this->getConnection()->query('EXPLAIN QUERY PLAN '.$this->getSqlFromPreparedStatement($sql, $values))->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
      * Get database version
-     *
-     * @access public
-     * @return array
      */
-    public function getDatabaseVersion()
+    public function getDatabaseVersion(): mixed
     {
         return $this->getConnection()->query('SELECT sqlite_version()')->fetchColumn();
     }

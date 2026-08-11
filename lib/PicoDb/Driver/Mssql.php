@@ -15,7 +15,7 @@ class Mssql extends Base
     /**
      * List of required settings options
      *
-     * @access protected
+     * @var string[]
      */
     protected array $requiredAttributes = [
         'hostname',
@@ -26,18 +26,13 @@ class Mssql extends Base
 
     /**
      * Table to store the schema version
-     *
-     * @access private
      */
     private string $schemaTable = 'schema_version';
 
     /**
      * Create a new PDO connection
-     *
-     * @access public
-     * @param  array   $settings
      */
-    public function createConnection(array $settings)
+    public function createConnection(array $settings): void
     {
         $dsn = 'sqlsrv:Server=' . $settings['hostname'] . ';Database=' . $settings['database'];
 
@@ -57,20 +52,16 @@ class Mssql extends Base
 
     /**
      * Enable foreign keys
-     *
-     * @access public
      */
-    public function enableForeignKeys()
+    public function enableForeignKeys(): void
     {
         $this->getConnection()->exec('EXEC sp_MSforeachtable @command1="ALTER TABLE ? CHECK CONSTRAINT ALL"; GO;');
     }
 
     /**
      * Disable foreign keys
-     *
-     * @access public
      */
-    public function disableForeignKeys()
+    public function disableForeignKeys(): void
     {
         $this->getConnection()->exec('EXEC sp_MSforeachtable @command1="ALTER TABLE ? NOCHECK CONSTRAINT ALL"; GO;');
     }
@@ -78,11 +69,9 @@ class Mssql extends Base
     /**
      * Return true if the error code is a duplicate key
      *
-     * @access public
      * @param  integer  $code
-     * @return boolean
      */
-    public function isDuplicateKeyError($code)
+    public function isDuplicateKeyError($code): bool
     {
         return $code == 2601;
     }
@@ -92,11 +81,9 @@ class Mssql extends Base
      *
      * https://msdn.microsoft.com/en-us/library/ms175874.aspx
      *
-     * @access public
      * @param  string  $identifier
-     * @return string
      */
-    public function escape($identifier)
+    public function escape($identifier): string
     {
         return '['.$identifier.']';
     }
@@ -104,11 +91,9 @@ class Mssql extends Base
     /**
      * Get non standard operator
      *
-     * @access public
      * @param  string  $operator
-     * @return string
      */
-    public function getOperator($operator)
+    public function getOperator($operator): string
     {
         if ($operator === 'LIKE' || $operator === 'ILIKE') {
             return 'LIKE';
@@ -138,8 +123,6 @@ class Mssql extends Base
 
     /**
      * Get last inserted id
-     *
-     * @access public
      */
     public function getLastId(): string|false
     {
@@ -148,11 +131,8 @@ class Mssql extends Base
 
     /**
      * Get current schema version
-     *
-     * @access public
-     * @return integer
      */
-    public function getSchemaVersion()
+    public function getSchemaVersion(): int
     {
         $this->getConnection()->exec("IF (OBJECT_ID('".$this->schemaTable."')) IS NULL CREATE TABLE [".$this->schemaTable."] ([version] INT DEFAULT '0')");
 
@@ -163,9 +143,7 @@ class Mssql extends Base
         if ($result !== false) {
             return (int) $result;
         }
-        else {
-            $this->getConnection()->exec('INSERT INTO ['.$this->schemaTable.'] VALUES(0)');
-        }
+        $this->getConnection()->exec('INSERT INTO ['.$this->schemaTable.'] VALUES(0)');
 
         return 0;
     }
@@ -173,23 +151,20 @@ class Mssql extends Base
     /**
      * Set current schema version
      *
-     * @access public
      * @param  integer  $version
      */
-    public function setSchemaVersion($version)
+    public function setSchemaVersion($version): void
     {
         $rq = $this->getConnection()->prepare('UPDATE ['.$this->schemaTable.'] SET [version]=?');
-        $rq->execute(array($version));
+        $rq->execute([$version]);
     }
 
     /**
      * Run EXPLAIN command
      *
      * @param  string $sql
-     * @param  array  $values
-     * @return array
      */
-    public function explain($sql, array $values)
+    public function explain($sql, array $values): array
     {
         $this->getConnection()->exec('SET SHOWPLAN_ALL ON');
         return $this->getConnection()->query($this->getSqlFromPreparedStatement($sql, $values))->fetchAll(PDO::FETCH_ASSOC);
@@ -201,9 +176,8 @@ class Mssql extends Base
      * @param int|null $limit
      * @param int|null $offset
      * @param string|null $order
-     * @return string
      */
-    public function getLimitClause($limit, $offset, $order)
+    public function getLimitClause($limit, $offset, $order): string
     {
         $clause = '';
 

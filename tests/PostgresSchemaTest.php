@@ -1,28 +1,28 @@
 <?php
+use PHPUnit\Framework\TestCase;
+use PicoDb\Database;
+
 require_once __DIR__.'/SchemaFixture.php';
 
-class PostgresSchemaTest extends \PHPUnit\Framework\TestCase
+class PostgresSchemaTest extends TestCase
 {
-    /**
-     * @var PicoDb\Database
-     */
-    private $db;
+    private Database $db;
 
     public function setUp(): void
     {
-        $this->db = new PicoDb\Database(array('driver' => 'postgres', 'hostname' => getenv('POSTGRES_HOST'), 'username' => 'root', 'password' => 'rootpassword', 'database' => 'picodb'));
+        $this->db = new Database(['driver' => 'postgres', 'hostname' => getenv('POSTGRES_HOST'), 'username' => 'root', 'password' => 'rootpassword', 'database' => 'picodb']);
         $this->db->getConnection()->exec('DROP TABLE IF EXISTS test1');
         $this->db->getConnection()->exec('DROP TABLE IF EXISTS test2');
         $this->db->getConnection()->exec('DROP TABLE IF EXISTS schema_version');
     }
 
-    public function testMigrations()
+    public function testMigrations(): void
     {
         $this->assertTrue($this->db->schema()->check(2));
         $this->assertEquals(2, $this->db->getDriver()->getSchemaVersion());
     }
 
-    public function testFailedMigrations()
+    public function testFailedMigrations(): void
     {
         $this->assertEquals(0, $this->db->getDriver()->getSchemaVersion());
         $this->assertFalse($this->db->schema()->check(3));

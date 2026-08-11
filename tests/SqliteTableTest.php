@@ -1,51 +1,49 @@
 <?php
 
+use PHPUnit\Framework\TestCase;
 use PicoDb\Database;
 use PicoDb\Table;
 
-class SqliteTableTest extends \PHPUnit\Framework\TestCase
+class SqliteTableTest extends TestCase
 {
-    /**
-     * @var PicoDb\Database
-     */
-    private $db;
+    private Database $db;
 
     public function setUp(): void
     {
-        $this->db = new Database(array('driver' => 'sqlite', 'filename' => ':memory:'));
+        $this->db = new Database(['driver' => 'sqlite', 'filename' => ':memory:']);
     }
 
-    public function testSelect()
+    public function testSelect(): void
     {
         $this->assertEquals('SELECT 1 FROM "test"', $this->db->table('test')->select(1)->buildSelectQuery());
     }
 
-    public function testColumns()
+    public function testColumns(): void
     {
         $this->assertEquals('SELECT "a", "b" FROM "test"', $this->db->table('test')->columns('a', 'b')->buildSelectQuery());
     }
 
-    public function testDistinct()
+    public function testDistinct(): void
     {
         $this->assertEquals('SELECT DISTINCT "a", "b" FROM "test"', $this->db->table('test')->distinct('a', 'b')->buildSelectQuery());
     }
 
-    public function testGroupBy()
+    public function testGroupBy(): void
     {
         $this->assertEquals('SELECT * FROM "test"   GROUP BY "a"', $this->db->table('test')->groupBy('a')->buildSelectQuery());
     }
 
-    public function testHavingGt()
+    public function testHavingGt(): void
     {
         $this->assertEquals('SELECT COUNT(*) as total FROM "test"   GROUP BY "a"  HAVING "total" > ?', $this->db->table('test')->columns('COUNT(*) as total')->groupBy('a')->having()->gt('total', '2')->buildSelectQuery());
     }
 
-    public function testHavingAnd()
+    public function testHavingAnd(): void
     {
         $this->assertEquals('SELECT COUNT(*) as total FROM "test"   GROUP BY "a"  HAVING ("total" > ? AND "total" < ?)', $this->db->table('test')->columns('COUNT(*) as total')->groupBy('a')->having()->beginAnd()->gt('total', '2')->lt('total', '10')->closeAnd()->buildSelectQuery());
     }
 
-    public function testOrderBy()
+    public function testOrderBy(): void
     {
         $this->assertEquals('SELECT * FROM "test"      ORDER BY "a" ASC', $this->db->table('test')->asc('a')->buildSelectQuery());
         $this->assertEquals('SELECT * FROM "test"      ORDER BY "a" ASC', $this->db->table('test')->orderBy('a', Table::SORT_ASC)->buildSelectQuery());
@@ -62,47 +60,47 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals('SELECT * FROM "test"      ORDER BY "a" DESC, "b" ASC', $this->db->table('test')->desc('a')->asc('b')->buildSelectQuery());
     }
 
-    public function testLike()
+    public function testLike(): void
     {
         $query = $this->db->table('test')->like('a', 'test');
         $this->assertEquals('SELECT * FROM "test"   WHERE "a" LIKE ?', $query->buildSelectQuery());
         $this->assertEquals('test', $query->getConditionBuilder()->getValues()[0]);
     }
 
-    public function testIlike()
+    public function testIlike(): void
     {
         $query = $this->db->table('test')->ilike('a', 'test');
         $this->assertEquals('SELECT * FROM "test"   WHERE "a" LIKE ?', $query->buildSelectQuery());
         $this->assertEquals('test', $query->getConditionBuilder()->getValues()[0]);
     }
 
-    public function testNotLike()
+    public function testNotLike(): void
     {
         $query = $this->db->table('test')->notLike('a', 'test');
         $this->assertEquals('SELECT * FROM "test"   WHERE "a" NOT LIKE ?', $query->buildSelectQuery());
         $this->assertEquals('test', $query->getConditionBuilder()->getValues()[0]);
     }
 
-    public function testLimit()
+    public function testLimit(): void
     {
         $this->assertEquals('SELECT * FROM "test"       LIMIT 10', $this->db->table('test')->limit(10)->buildSelectQuery());
         $this->assertEquals('SELECT * FROM "test"', $this->db->table('test')->limit(null)->buildSelectQuery());
     }
 
-    public function testOffset()
+    public function testOffset(): void
     {
         $this->assertEquals('SELECT * FROM "test"        OFFSET 0', $this->db->table('test')->offset(0)->buildSelectQuery());
         $this->assertEquals('SELECT * FROM "test"        OFFSET 10', $this->db->table('test')->offset(10)->buildSelectQuery());
         $this->assertEquals('SELECT * FROM "test"', $this->db->table('test')->limit(null)->buildSelectQuery());
     }
 
-    public function testLimitOffset()
+    public function testLimitOffset(): void
     {
         $this->assertEquals('SELECT * FROM "test"       LIMIT 2  OFFSET 0', $this->db->table('test')->offset(0)->limit(2)->buildSelectQuery());
         $this->assertEquals('SELECT * FROM "test"       LIMIT 5  OFFSET 10', $this->db->table('test')->offset(10)->limit(5)->buildSelectQuery());
     }
 
-    public function testLimitOffsetNeutralizesInjection()
+    public function testLimitOffsetNeutralizesInjection(): void
     {
         $this->assertEquals(
             'SELECT * FROM "test"       LIMIT 10',
@@ -125,41 +123,41 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    public function testSubquery()
+    public function testSubquery(): void
     {
         $this->assertEquals('SELECT (SELECT 1 FROM "foobar" WHERE 1=1) AS "b" FROM "test"', $this->db->table('test')->subquery('SELECT 1 FROM "foobar" WHERE 1=1', 'b')->buildSelectQuery());
     }
 
-    public function testConditionEqual()
+    public function testConditionEqual(): void
     {
         $table = $this->db->table('test');
 
         $this->assertEquals('SELECT * FROM "test"   WHERE "a" = ? AND "b" = ?', $table->eq('a', 2)->eq('b', 'foobar')->buildSelectQuery());
-        $this->assertEquals(array(2, 'foobar'), $table->getConditionBuilder()->getValues());
+        $this->assertEquals([2, 'foobar'], $table->getConditionBuilder()->getValues());
     }
 
-    public function testConditionNotEqual()
+    public function testConditionNotEqual(): void
     {
         $table = $this->db->table('test');
 
         $this->assertEquals('SELECT * FROM "test"   WHERE "a" != ?', $table->neq('a', 2)->buildSelectQuery());
-        $this->assertEquals(array(2), $table->getConditionBuilder()->getValues());
+        $this->assertEquals([2], $table->getConditionBuilder()->getValues());
     }
 
-    public function testConditionIn()
+    public function testConditionIn(): void
     {
         $table = $this->db->table('test');
 
-        $this->assertEquals('SELECT * FROM "test"   WHERE "a" IN (?, ?)', $table->in('a', array('b', 'c'))->buildSelectQuery());
-        $this->assertEquals(array('b', 'c'), $table->getConditionBuilder()->getValues());
+        $this->assertEquals('SELECT * FROM "test"   WHERE "a" IN (?, ?)', $table->in('a', ['b', 'c'])->buildSelectQuery());
+        $this->assertEquals(['b', 'c'], $table->getConditionBuilder()->getValues());
         
         $table = $this->db->table('test');
 
-        $this->assertEquals('SELECT * FROM "test"   WHERE 0 = 1', $table->in('a', array())->buildSelectQuery());
-        $this->assertEquals(array(), $table->getConditionBuilder()->getValues());
+        $this->assertEquals('SELECT * FROM "test"   WHERE 0 = 1', $table->in('a', [])->buildSelectQuery());
+        $this->assertEquals([], $table->getConditionBuilder()->getValues());
     }
 
-    public function testConditionInSubquery()
+    public function testConditionInSubquery(): void
     {
         $table = $this->db->table('test');
         $subquery = $this->db->table('test2')->columns('c')->eq('d', 'e');
@@ -169,23 +167,23 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
             $table->inSubquery('a', $subquery)->buildSelectQuery()
         );
 
-        $this->assertEquals(array('e'), $table->getConditionBuilder()->getValues());
+        $this->assertEquals(['e'], $table->getConditionBuilder()->getValues());
     }
 
-    public function testConditionNotIn()
+    public function testConditionNotIn(): void
     {
         $table = $this->db->table('test');
 
-        $this->assertEquals('SELECT * FROM "test"   WHERE "a" NOT IN (?, ?)', $table->notIn('a', array('b', 'c'))->buildSelectQuery());
-        $this->assertEquals(array('b', 'c'), $table->getConditionBuilder()->getValues());
+        $this->assertEquals('SELECT * FROM "test"   WHERE "a" NOT IN (?, ?)', $table->notIn('a', ['b', 'c'])->buildSelectQuery());
+        $this->assertEquals(['b', 'c'], $table->getConditionBuilder()->getValues());
 
         $table = $this->db->table('test');
 
-        $this->assertEquals('SELECT * FROM "test"', $table->notIn('a', array())->buildSelectQuery());
-        $this->assertEquals(array(), $table->getConditionBuilder()->getValues());
+        $this->assertEquals('SELECT * FROM "test"', $table->notIn('a', [])->buildSelectQuery());
+        $this->assertEquals([], $table->getConditionBuilder()->getValues());
     }
 
-    public function testConditionNotInSubquery()
+    public function testConditionNotInSubquery(): void
     {
         $table = $this->db->table('test');
         $subquery = $this->db->table('test2')->columns('c')->eq('d', 'e');
@@ -195,34 +193,34 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
             $table->notInSubquery('a', $subquery)->buildSelectQuery()
         );
 
-        $this->assertEquals(array('e'), $table->getConditionBuilder()->getValues());
+        $this->assertEquals(['e'], $table->getConditionBuilder()->getValues());
     }
 
-    public function testConditionLike()
+    public function testConditionLike(): void
     {
         $table = $this->db->table('test');
 
         $this->assertEquals('SELECT * FROM "test"   WHERE "a" LIKE ?', $table->like('a', '%foobar%')->buildSelectQuery());
-        $this->assertEquals(array('%foobar%'), $table->getConditionBuilder()->getValues());
+        $this->assertEquals(['%foobar%'], $table->getConditionBuilder()->getValues());
     }
 
-    public function testConditionILike()
+    public function testConditionILike(): void
     {
         $table = $this->db->table('test');
 
         $this->assertEquals('SELECT * FROM "test"   WHERE "a" LIKE ?', $table->ilike('a', '%foobar%')->buildSelectQuery());
-        $this->assertEquals(array('%foobar%'), $table->getConditionBuilder()->getValues());
+        $this->assertEquals(['%foobar%'], $table->getConditionBuilder()->getValues());
     }
 
-    public function testConditionGreaterThan()
+    public function testConditionGreaterThan(): void
     {
         $table = $this->db->table('test');
 
         $this->assertEquals('SELECT * FROM "test"   WHERE "a" > ?', $table->gt('a', 5)->buildSelectQuery());
-        $this->assertEquals(array(5), $table->getConditionBuilder()->getValues());
+        $this->assertEquals([5], $table->getConditionBuilder()->getValues());
     }
 
-    public function testConditionGreaterThanInSubquery()
+    public function testConditionGreaterThanInSubquery(): void
     {
         $table = $this->db->table('test');
         $subquery = $this->db->table('test2')->columns('c')->eq('d', 'e');
@@ -232,18 +230,18 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
             $table->gtSubquery('a', $subquery)->buildSelectQuery()
         );
 
-        $this->assertEquals(array('e'), $table->getConditionBuilder()->getValues());
+        $this->assertEquals(['e'], $table->getConditionBuilder()->getValues());
     }
 
-    public function testConditionGreaterThanOrEqual()
+    public function testConditionGreaterThanOrEqual(): void
     {
         $table = $this->db->table('test');
 
         $this->assertEquals('SELECT * FROM "test"   WHERE "a" >= ?', $table->gte('a', 5)->buildSelectQuery());
-        $this->assertEquals(array(5), $table->getConditionBuilder()->getValues());
+        $this->assertEquals([5], $table->getConditionBuilder()->getValues());
     }
 
-    public function testConditionGreaterThanEqualInSubquery()
+    public function testConditionGreaterThanEqualInSubquery(): void
     {
         $table = $this->db->table('test');
         $subquery = $this->db->table('test2')->columns('c')->eq('d', 'e');
@@ -253,18 +251,18 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
             $table->gteSubquery('a', $subquery)->buildSelectQuery()
         );
 
-        $this->assertEquals(array('e'), $table->getConditionBuilder()->getValues());
+        $this->assertEquals(['e'], $table->getConditionBuilder()->getValues());
     }
 
-    public function testConditionLowerThan()
+    public function testConditionLowerThan(): void
     {
         $table = $this->db->table('test');
 
         $this->assertEquals('SELECT * FROM "test"   WHERE "a" < ?', $table->lt('a', 5)->buildSelectQuery());
-        $this->assertEquals(array(5), $table->getConditionBuilder()->getValues());
+        $this->assertEquals([5], $table->getConditionBuilder()->getValues());
     }
 
-    public function testConditionLowerThanInSubquery()
+    public function testConditionLowerThanInSubquery(): void
     {
         $table = $this->db->table('test');
         $subquery = $this->db->table('test2')->columns('c')->eq('d', 'e');
@@ -274,18 +272,18 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
             $table->ltSubquery('a', $subquery)->buildSelectQuery()
         );
 
-        $this->assertEquals(array('e'), $table->getConditionBuilder()->getValues());
+        $this->assertEquals(['e'], $table->getConditionBuilder()->getValues());
     }
 
-    public function testConditionLowerThanOrEqual()
+    public function testConditionLowerThanOrEqual(): void
     {
         $table = $this->db->table('test');
 
         $this->assertEquals('SELECT * FROM "test"   WHERE "a" <= ?', $table->lte('a', 5)->buildSelectQuery());
-        $this->assertEquals(array(5), $table->getConditionBuilder()->getValues());
+        $this->assertEquals([5], $table->getConditionBuilder()->getValues());
     }
 
-    public function testConditionLowerThanEqualInSubquery()
+    public function testConditionLowerThanEqualInSubquery(): void
     {
         $table = $this->db->table('test');
         $subquery = $this->db->table('test2')->columns('c')->eq('d', 'e');
@@ -295,39 +293,39 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
             $table->lteSubquery('a', $subquery)->buildSelectQuery()
         );
 
-        $this->assertEquals(array('e'), $table->getConditionBuilder()->getValues());
+        $this->assertEquals(['e'], $table->getConditionBuilder()->getValues());
     }
 
-    public function testBetween()
+    public function testBetween(): void
     {
         $query = $this->db->table('test')->between('a', 1, 5);
         $this->assertEquals('SELECT * FROM "test"   WHERE "a" BETWEEN ? AND ?', $query->buildSelectQuery());
         $this->assertEquals([1,5], $query->getConditionBuilder()->getValues());
     }
 
-    public function testNotBetween()
+    public function testNotBetween(): void
     {
         $query = $this->db->table('test')->notBetween('a', 1, 5);
         $this->assertEquals('SELECT * FROM "test"   WHERE "a" NOT BETWEEN ? AND ?', $query->buildSelectQuery());
         $this->assertEquals([1,5], $query->getConditionBuilder()->getValues());
     }
 
-    public function testConditionIsNull()
+    public function testConditionIsNull(): void
     {
         $table = $this->db->table('test');
 
         $this->assertEquals('SELECT * FROM "test"   WHERE "a" IS NOT NULL', $table->notNull('a')->buildSelectQuery());
-        $this->assertEquals(array(), $table->getConditionBuilder()->getValues());
+        $this->assertEquals([], $table->getConditionBuilder()->getValues());
     }
 
-    public function testCount()
+    public function testCount(): void
     {
         $this->assertNotFalse($this->db->execute('CREATE TABLE foobar (a INTEGER, b INTEGER )'));
-        $this->assertTrue($this->db->table('foobar')->insert(array('a' => 2, 'b' => 3)));
-        $this->assertTrue($this->db->table('foobar')->insert(array('a' => 5, 'b' => 1)));
-        $this->assertTrue($this->db->table('foobar')->insert(array('a' => 6, 'b' => 2)));
-        $this->assertTrue($this->db->table('foobar')->insert(array('a' => null, 'b' => 3)));
-        $this->assertTrue($this->db->table('foobar')->insert(array('a' => 2, 'b' => 4)));
+        $this->assertTrue($this->db->table('foobar')->insert(['a' => 2, 'b' => 3]));
+        $this->assertTrue($this->db->table('foobar')->insert(['a' => 5, 'b' => 1]));
+        $this->assertTrue($this->db->table('foobar')->insert(['a' => 6, 'b' => 2]));
+        $this->assertTrue($this->db->table('foobar')->insert(['a' => null, 'b' => 3]));
+        $this->assertTrue($this->db->table('foobar')->insert(['a' => 2, 'b' => 4]));
 
         $query = $this->db->table('foobar');
         $this->assertEquals(5, $query->count());
@@ -347,7 +345,7 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(4, $distinctQuery->count('b'));
     }
 
-    public function testCountSubQueryHaving()
+    public function testCountSubQueryHaving(): void
     {
         $this->assertNotFalse($this->db->execute('CREATE TABLE foo (foo INTEGER)'));
         $this->assertNotFalse($this->db->execute('CREATE TABLE foobar (foo INTEGER, bar INTEGER)'));
@@ -384,79 +382,79 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(2, $query->count());
     }
 
-    public function testCustomCondition()
+    public function testCustomCondition(): void
     {
         $table = $this->db->table('test');
 
         $this->assertEquals('SELECT * FROM "test"   WHERE a=c AND "b" = ?', $table->addCondition('a=c')->eq('b', 4)->buildSelectQuery());
-        $this->assertEquals(array(4), $table->getConditionBuilder()->getValues());
+        $this->assertEquals([4], $table->getConditionBuilder()->getValues());
     }
 
-    public function testNotConditions()
+    public function testNotConditions(): void
     {
         $table = $this->db->table('test');
 
         $this->assertEquals('SELECT * FROM "test"   WHERE NOT ("a" = ? AND "b" = ?)', $table->beginNot()->eq('a', 1)->eq('b', 2)->closeNot()->buildSelectQuery());
-        $this->assertEquals(array(1, 2), $table->getConditionBuilder()->getValues());
+        $this->assertEquals([1, 2], $table->getConditionBuilder()->getValues());
     }
 
-    public function testNotEmbeddedConditions()
+    public function testNotEmbeddedConditions(): void
     {
         $table = $this->db->table('test');
 
         $this->assertEquals('SELECT * FROM "test"   WHERE NOT ("a" = ? OR "b" = ?)', $table->beginNot()->beginOr()->eq('a', 1)->eq('b', 2)->closeOr()->closeNot()->buildSelectQuery());
-        $this->assertEquals(array(1, 2), $table->getConditionBuilder()->getValues());
+        $this->assertEquals([1, 2], $table->getConditionBuilder()->getValues());
     }
 
-    public function testAndConditions()
+    public function testAndConditions(): void
     {
         $table = $this->db->table('test');
 
         $this->assertEquals('SELECT * FROM "test"   WHERE ("a" IS NOT NULL OR ("b" = ? AND "c" >= ?))', $table->beginOr()->notNull('a')->beginAnd()->eq('b', 2)->gte('c', 5)->closeAnd()->closeOr()->buildSelectQuery());
-        $this->assertEquals(array(2, 5), $table->getConditionBuilder()->getValues());
+        $this->assertEquals([2, 5], $table->getConditionBuilder()->getValues());
     }
 
-    public function testOrConditions()
+    public function testOrConditions(): void
     {
         $table = $this->db->table('test');
 
         $this->assertEquals('SELECT * FROM "test"   WHERE "a" IS NOT NULL AND ("b" = ? OR "c" >= ?)', $table->notNull('a')->beginOr()->eq('b', 2)->gte('c', 5)->closeOr()->buildSelectQuery());
-        $this->assertEquals(array(2, 5), $table->getConditionBuilder()->getValues());
+        $this->assertEquals([2, 5], $table->getConditionBuilder()->getValues());
     }
 
-    public function testAnd()
+    public function testAnd(): void
     {
         $table = $this->db->table('test');
 
         $this->assertEquals('SELECT * FROM "test"   WHERE ("a" = ? AND "b" = ?)', $table->and(fn($q) => $q->eq('a', 1)->eq('b', 2))->buildSelectQuery());
-        $this->assertEquals(array(1, 2), $table->getConditionBuilder()->getValues());
+        $this->assertEquals([1, 2], $table->getConditionBuilder()->getValues());
     }
 
-    public function testOr()
+    public function testOr(): void
     {
         $table = $this->db->table('test');
 
         $this->assertEquals('SELECT * FROM "test"   WHERE ("a" = ? OR "b" = ?)', $table->or(fn($q) => $q->eq('a', 1)->eq('b', 2))->buildSelectQuery());
-        $this->assertEquals(array(1, 2), $table->getConditionBuilder()->getValues());
+        $this->assertEquals([1, 2], $table->getConditionBuilder()->getValues());
     }
 
-    public function testNot()
+    public function testNot(): void
     {
         $table = $this->db->table('test');
 
         $this->assertEquals('SELECT * FROM "test"   WHERE NOT ("a" = ? AND "b" = ?)', $table->not(fn($q) => $q->eq('a', 1)->eq('b', 2))->buildSelectQuery());
-        $this->assertEquals(array(1, 2), $table->getConditionBuilder()->getValues());
+        $this->assertEquals([1, 2], $table->getConditionBuilder()->getValues());
     }
 
-    public function testNotSingleCondition()
+    public function testNotSingleCondition(): void
     {
         $table = $this->db->table('test');
 
         $this->assertEquals('SELECT * FROM "test"   WHERE NOT "a" = ?', $table->not(fn($q) => $q->eq('a', 1))->buildSelectQuery());
-        $this->assertEquals(array(1), $table->getConditionBuilder()->getValues());
+        $this->assertEquals([1], $table->getConditionBuilder()->getValues());
     }
 
-    public function testOrNested()
+    public function testOrNested(): void
     {
         $table = $this->db->table('test');
 
@@ -470,20 +468,20 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
                 )
                 ->buildSelectQuery()
         );
-        $this->assertEquals(array(2, 3, 5), $table->getConditionBuilder()->getValues());
+        $this->assertEquals([2, 3, 5], $table->getConditionBuilder()->getValues());
     }
 
-    public function testHavingSubquery()
+    public function testHavingSubquery(): void
     {
         $table = $this->db->table('test')->notNull('a')->beginOr()->eq('b', 2)->gte('c', 5)->closeOr();
         $subquery = $this->db->table('test')->columns('a')->groupBy('a')->having()->gte('SUM( d )', 10);
         $table->inSubquery('a', $subquery);
 
         $this->assertEquals('SELECT * FROM "test"   WHERE "a" IS NOT NULL AND ("b" = ? OR "c" >= ?) AND "a" IN (SELECT "a" FROM "test"   GROUP BY "a"  HAVING SUM( d ) >= ?)', $table->buildSelectQuery());
-        $this->assertEquals(array(2, 5, 10), $table->getConditionBuilder()->getValues());
+        $this->assertEquals([2, 5, 10], $table->getConditionBuilder()->getValues());
     }
 
-    public function testMultipleOrConditions()
+    public function testMultipleOrConditions(): void
     {
         $table = $this->db->table('test');
 
@@ -502,26 +500,26 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
                 ->buildSelectQuery()
         );
 
-        $this->assertEquals(array(2, 6, 3, 5), $table->getConditionBuilder()->getValues());
+        $this->assertEquals([2, 6, 3, 5], $table->getConditionBuilder()->getValues());
     }
 
-    public function testPersist()
+    public function testPersist(): void
     {
         $this->assertNotFalse($this->db->execute('CREATE TABLE foobar_persist (id INTEGER PRIMARY KEY, a TEXT)'));
-        $this->assertSame(1, $this->db->table('foobar_persist')->persist(array('a' => 'b')));
+        $this->assertSame(1, $this->db->table('foobar_persist')->persist(['a' => 'b']));
     }
 
-    public function testInsertUpdate()
+    public function testInsertUpdate(): void
     {
         $this->assertNotFalse($this->db->execute('CREATE TABLE foobar (a TEXT)'));
-        $this->assertTrue($this->db->table('foobar')->insert(array('a' => 'b')));
-        $this->assertTrue($this->db->table('foobar')->insert(array('a' => 'c')));
+        $this->assertTrue($this->db->table('foobar')->insert(['a' => 'b']));
+        $this->assertTrue($this->db->table('foobar')->insert(['a' => 'c']));
 
-        $this->assertEquals(array(array('a' => 'b'), array('a' => 'c')), $this->db->table('foobar')->findAll());
+        $this->assertEquals([['a' => 'b'], ['a' => 'c']], $this->db->table('foobar')->findAll());
 
-        $this->assertEquals(array('b', 'c'), $this->db->table('foobar')->findAllByColumn('a'));
+        $this->assertEquals(['b', 'c'], $this->db->table('foobar')->findAllByColumn('a'));
 
-        $this->assertEquals(array('a' => 'b'), $this->db->table('foobar')->findOne());
+        $this->assertEquals(['a' => 'b'], $this->db->table('foobar')->findOne());
 
         $this->assertEquals('b', $this->db->table('foobar')->findOneColumn('a'));
 
@@ -536,78 +534,79 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
         $this->assertTrue($this->db->table('foobar')->eq('a', 'c')->remove());
         $this->assertFalse($this->db->table('foobar')->eq('a', 'e')->remove());
 
-        $this->assertTrue($this->db->table('foobar')->eq('a', 'b')->update(array('a' => 'test')));
-        $this->assertTrue($this->db->table('foobar')->eq('a', 'lol')->update(array('a' => 'test')));
+        $this->assertTrue($this->db->table('foobar')->eq('a', 'b')->update(['a' => 'test']));
+        $this->assertTrue($this->db->table('foobar')->eq('a', 'lol')->update(['a' => 'test']));
 
         $this->assertNotEmpty($this->db->table('foobar')->eq('a', 'test')->findOne());
         $this->assertNull($this->db->table('foobar')->eq('a', 'lol')->findOne());
 
-        $this->assertTrue($this->db->table('foobar')->eq('a', 'test')->save(array('a' => 'plop')));
+        $this->assertTrue($this->db->table('foobar')->eq('a', 'test')->save(['a' => 'plop']));
         $this->assertEquals(1, $this->db->table('foobar')->count());
     }
 
-    public function testSumColumn()
+    public function testSumColumn(): void
     {
         $this->assertNotFalse($this->db->execute('CREATE TABLE foobar (b REAL, c REAL)'));
-        $this->assertTrue($this->db->table('foobar')->insert(array('b' => 2, 'c' => 3.3)));
+        $this->assertTrue($this->db->table('foobar')->insert(['b' => 2, 'c' => 3.3]));
 
         $this->assertTrue($this->db->table('foobar')->sumColumn('b', 2.5)->sumColumn('c', 3)->update());
 
         $this->assertEquals(
-            array('b' => 4.5, 'c' => 6.3),
+            ['b' => 4.5, 'c' => 6.3],
             $this->db->table('foobar')->findOne()
         );
     }
 
-    public function testCallback()
+    public function testCallback(): void
     {
         $this->assertNotFalse($this->db->execute('CREATE TABLE foobar (a TEXT)'));
-        $this->assertTrue($this->db->table('foobar')->insert(array('a' => 'b')));
-        $this->assertTrue($this->db->table('foobar')->insert(array('a' => 'c')));
+        $this->assertTrue($this->db->table('foobar')->insert(['a' => 'b']));
+        $this->assertTrue($this->db->table('foobar')->insert(['a' => 'c']));
 
-        $func = function () {
-            return array('test');
-        };
+        $func = (fn(): array => ['test']);
 
-        $this->assertEquals(array('test'), $this->db->table('foobar')->callback($func)->findAll());
-        $this->assertEquals(array('plop'), $this->db->table('foobar')->callback(array($this, 'myCallback'))->findAll());
+        $this->assertEquals(['test'], $this->db->table('foobar')->callback($func)->findAll());
+        $this->assertEquals(['plop'], $this->db->table('foobar')->callback([$this, 'myCallback'])->findAll());
     }
 
-    public function myCallback(array $records)
+    /**
+     * @return array<int, string>
+     */
+    public function myCallback(array $records): array
     {
-        $this->assertEquals(array(array('a' => 'b'), array('a' => 'c')), $records);
-        return array('plop');
+        $this->assertEquals([['a' => 'b'], ['a' => 'c']], $records);
+        return ['plop'];
     }
 
-    public function testSum()
+    public function testSum(): void
     {
         $this->assertNotFalse($this->db->execute('CREATE TABLE foobar (a INTEGER)'));
-        $this->assertTrue($this->db->table('foobar')->insert(array('a' => 2)));
-        $this->assertTrue($this->db->table('foobar')->insert(array('a' => 5)));
+        $this->assertTrue($this->db->table('foobar')->insert(['a' => 2]));
+        $this->assertTrue($this->db->table('foobar')->insert(['a' => 5]));
         $this->assertEquals(7, $this->db->table('foobar')->sum('a'));
     }
 
-    public function testSumSubqueryHaving()
+    public function testSumSubqueryHaving(): void
     {
         $this->assertNotFalse($this->db->execute('CREATE TABLE foobar(foo INTEGER, status INTEGER DEFAULT 0)'));
         $this->assertNotFalse($this->db->execute('CREATE TABLE foopoints(foo INTEGER, points INTEGER)'));
 
-        $this->assertNotFalse($this->db->table('foobar')->insert(array('foo'=>1, 'status'=>0)));
-        $this->assertNotFalse($this->db->table('foobar')->insert(array('foo'=>2, 'status'=>0)));
-        $this->assertNotFalse($this->db->table('foobar')->insert(array('foo'=>3, 'status'=>1)));
-        $this->assertNotFalse($this->db->table('foobar')->insert(array('foo'=>4, 'status'=>0)));
-        $this->assertNotFalse($this->db->table('foobar')->insert(array('foo'=>5, 'status'=>1)));
+        $this->assertNotFalse($this->db->table('foobar')->insert(['foo'=>1, 'status'=>0]));
+        $this->assertNotFalse($this->db->table('foobar')->insert(['foo'=>2, 'status'=>0]));
+        $this->assertNotFalse($this->db->table('foobar')->insert(['foo'=>3, 'status'=>1]));
+        $this->assertNotFalse($this->db->table('foobar')->insert(['foo'=>4, 'status'=>0]));
+        $this->assertNotFalse($this->db->table('foobar')->insert(['foo'=>5, 'status'=>1]));
 
-        $this->assertNotFalse($this->db->table('foopoints')->insert(array('foo'=>1, 'points'=>10)));
-        $this->assertNotFalse($this->db->table('foopoints')->insert(array('foo'=>1, 'points'=>2)));
-        $this->assertNotFalse($this->db->table('foopoints')->insert(array('foo'=>2, 'points'=>18)));
-        $this->assertNotFalse($this->db->table('foopoints')->insert(array('foo'=>2, 'points'=>3)));
-        $this->assertNotFalse($this->db->table('foopoints')->insert(array('foo'=>3, 'points'=>7)));
-        $this->assertNotFalse($this->db->table('foopoints')->insert(array('foo'=>3, 'points'=>8)));
-        $this->assertNotFalse($this->db->table('foopoints')->insert(array('foo'=>4, 'points'=>12)));
-        $this->assertNotFalse($this->db->table('foopoints')->insert(array('foo'=>4, 'points'=>7)));
-        $this->assertNotFalse($this->db->table('foopoints')->insert(array('foo'=>5, 'points'=>18)));
-        $this->assertNotFalse($this->db->table('foopoints')->insert(array('foo'=>5, 'points'=>8)));
+        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo'=>1, 'points'=>10]));
+        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo'=>1, 'points'=>2]));
+        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo'=>2, 'points'=>18]));
+        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo'=>2, 'points'=>3]));
+        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo'=>3, 'points'=>7]));
+        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo'=>3, 'points'=>8]));
+        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo'=>4, 'points'=>12]));
+        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo'=>4, 'points'=>7]));
+        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo'=>5, 'points'=>18]));
+        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo'=>5, 'points'=>8]));
 
         $subQuery = $this->db
             ->table('foopoints')
@@ -628,53 +627,53 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
         $this->db->execute('DROP TABLE IF EXISTS foopoints');
     }
 
-    public function testIncrement()
+    public function testIncrement(): void
     {
         $this->assertNotFalse($this->db->execute('CREATE TABLE foobar (a INTEGER DEFAULT 0, b INTEGER DEFAULT 0)'));
-        $this->assertTrue($this->db->table('foobar')->insert(array('a' => 2, 'b' => 5)));
+        $this->assertTrue($this->db->table('foobar')->insert(['a' => 2, 'b' => 5]));
         $this->assertTrue($this->db->table('foobar')->eq('b', 5)->increment('a', 3));
         $this->assertEquals(5, $this->db->table('foobar')->findOneColumn('a'));
     }
 
-    public function testLeftJoin()
+    public function testLeftJoin(): void
     {
         $this->assertNotFalse($this->db->execute('CREATE TABLE test1 (a INTEGER NOT NULL, foreign_key INTEGER NOT NULL)'));
         $this->assertNotFalse($this->db->execute('CREATE TABLE test2 (id INTEGER NOT NULL, b INTEGER NOT NULL)'));
 
-        $this->assertTrue($this->db->table('test2')->insert(array('id' => 42, 'b' => 2)));
-        $this->assertTrue($this->db->table('test1')->insert(array('a' => 18, 'foreign_key' => 42)));
+        $this->assertTrue($this->db->table('test2')->insert(['id' => 42, 'b' => 2]));
+        $this->assertTrue($this->db->table('test1')->insert(['a' => 18, 'foreign_key' => 42]));
 
         $this->assertEquals(
-            array('a' => 18, 'b' => 2),
+            ['a' => 18, 'b' => 2],
             $this->db->table('test2')->columns('a', 'b')->eq('a', 18)->left('test1', 't1', 'foreign_key', 'test2', 'id')->findOne()
         );
 
         $this->assertEquals(
-            array('a' => 18, 'b' => 2),
+            ['a' => 18, 'b' => 2],
             $this->db->table('test2')->columns('a', 'b')->eq('a', 18)->join('test1', 'foreign_key', 'id')->findOne()
         );
 
         $this->assertEquals(
-            array('a' => 18, 'b' => 2),
+            ['a' => 18, 'b' => 2],
             $this->db->table('test1')->columns('a', 'b')->join('test2', 'id', 'foreign_key')->findOne()
         );
     }
 
-    public function testLeftJoinConditions()
+    public function testLeftJoinConditions(): void
     {
         $this->assertNotFalse($this->db->execute('CREATE TABLE test1 (a INTEGER NOT NULL, foreign_key INTEGER NOT NULL)'));
         $this->assertNotFalse($this->db->execute('CREATE TABLE test2 (id INTEGER NOT NULL, b INTEGER NOT NULL)'));
 
-        $this->assertTrue($this->db->table('test2')->insert(array('id' => 42, 'b' => 2)));
-        $this->assertTrue($this->db->table('test1')->insert(array('a' => 18, 'foreign_key' => 42)));
+        $this->assertTrue($this->db->table('test2')->insert(['id' => 42, 'b' => 2]));
+        $this->assertTrue($this->db->table('test1')->insert(['a' => 18, 'foreign_key' => 42]));
 
         $this->assertEquals(
-            array('a' => 18, 'b' => 2),
+            ['a' => 18, 'b' => 2],
             $this->db->table('test2')->columns('a', 'b')->eq('a', 18)->left('test1', 't1', 'foreign_key', 'test2', 'id', ['a' => 18])->findOne()
         );
 
         $this->assertEquals(
-            array('a' => 18, 'b' => 2),
+            ['a' => 18, 'b' => 2],
             $this->db->table('test2')->columns('a', 'b')->eq('a', 18)->left('test1', 't1', 'foreign_key', 'test2', 'id', ['a' => [18, 19]])->findOne()
         );
 
@@ -683,7 +682,7 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    public function testLeftJoinNullCondition()
+    public function testLeftJoinNullCondition(): void
     {
         $query = $this->db->table('test2')->columns('a', 'b')->left('test1', 't1', 'foreign_key', 'test2', 'id', ['a' => null]);
 
@@ -696,31 +695,31 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
         $this->assertNotFalse($this->db->execute('CREATE TABLE test1 (a INTEGER, foreign_key INTEGER NOT NULL)'));
         $this->assertNotFalse($this->db->execute('CREATE TABLE test2 (id INTEGER NOT NULL, b INTEGER NOT NULL)'));
 
-        $this->assertTrue($this->db->table('test2')->insert(array('id' => 42, 'b' => 2)));
-        $this->assertTrue($this->db->table('test1')->insert(array('a' => null, 'foreign_key' => 42)));
-        $this->assertTrue($this->db->table('test1')->insert(array('a' => 18, 'foreign_key' => 42)));
+        $this->assertTrue($this->db->table('test2')->insert(['id' => 42, 'b' => 2]));
+        $this->assertTrue($this->db->table('test1')->insert(['a' => null, 'foreign_key' => 42]));
+        $this->assertTrue($this->db->table('test1')->insert(['a' => 18, 'foreign_key' => 42]));
 
         $this->assertEquals(
-            array('a' => null, 'b' => 2),
+            ['a' => null, 'b' => 2],
             $this->db->table('test2')->columns('a', 'b')->left('test1', 't1', 'foreign_key', 'test2', 'id', ['a' => null])->findOne()
         );
     }
 
-    public function testInnerJoinConditions()
+    public function testInnerJoinConditions(): void
     {
         $this->assertNotFalse($this->db->execute('CREATE TABLE test1 (a INTEGER NOT NULL, foreign_key INTEGER NOT NULL)'));
         $this->assertNotFalse($this->db->execute('CREATE TABLE test2 (id INTEGER NOT NULL, b INTEGER NOT NULL)'));
 
-        $this->assertTrue($this->db->table('test2')->insert(array('id' => 42, 'b' => 2)));
-        $this->assertTrue($this->db->table('test1')->insert(array('a' => 18, 'foreign_key' => 42)));
+        $this->assertTrue($this->db->table('test2')->insert(['id' => 42, 'b' => 2]));
+        $this->assertTrue($this->db->table('test1')->insert(['a' => 18, 'foreign_key' => 42]));
 
         $this->assertEquals(
-            array('a' => 18, 'b' => 2),
+            ['a' => 18, 'b' => 2],
             $this->db->table('test2')->columns('a', 'b')->inner('test1', 't1', 'foreign_key', 'test2', 'id', ['a' => 18])->findOne()
         );
 
         $this->assertEquals(
-            array('a' => 18, 'b' => 2),
+            ['a' => 18, 'b' => 2],
             $this->db->table('test2')->columns('a', 'b')->inner('test1', 't1', 'foreign_key', 'test2', 'id', ['a' => [18, 19]])->findOne()
         );
 
@@ -729,7 +728,7 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    public function testInnerJoinNullCondition()
+    public function testInnerJoinNullCondition(): void
     {
         $query = $this->db->table('test2')->columns('a', 'b')->inner('test1', 't1', 'foreign_key', 'test2', 'id', ['a' => null]);
 
@@ -742,32 +741,32 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
         $this->assertNotFalse($this->db->execute('CREATE TABLE test1 (a INTEGER, foreign_key INTEGER NOT NULL)'));
         $this->assertNotFalse($this->db->execute('CREATE TABLE test2 (id INTEGER NOT NULL, b INTEGER NOT NULL)'));
 
-        $this->assertTrue($this->db->table('test2')->insert(array('id' => 42, 'b' => 2)));
-        $this->assertTrue($this->db->table('test1')->insert(array('a' => null, 'foreign_key' => 42)));
-        $this->assertTrue($this->db->table('test1')->insert(array('a' => 18, 'foreign_key' => 42)));
+        $this->assertTrue($this->db->table('test2')->insert(['id' => 42, 'b' => 2]));
+        $this->assertTrue($this->db->table('test1')->insert(['a' => null, 'foreign_key' => 42]));
+        $this->assertTrue($this->db->table('test1')->insert(['a' => 18, 'foreign_key' => 42]));
 
         $this->assertEquals(
-            array('a' => null, 'b' => 2),
+            ['a' => null, 'b' => 2],
             $this->db->table('test2')->columns('a', 'b')->inner('test1', 't1', 'foreign_key', 'test2', 'id', ['a' => null])->findOne()
         );
     }
 
-    public function testJoinSubquery()
+    public function testJoinSubquery(): void
     {
         $this->assertNotFalse($this->db->execute('CREATE TABLE test1 (id INTEGER NOT NULL, a INTEGER NOT NULL)'));
         $this->assertNotFalse($this->db->execute('CREATE TABLE test2 (foreign_key INTEGER NOT NULL, b INTEGER)'));
 
-        $this->assertTrue($this->db->table('test1')->insert(array('id'=> 1, 'a' => 5)));
-        $this->assertTrue($this->db->table('test1')->insert(array('id'=> 2, 'a' => 1)));
-        $this->assertTrue($this->db->table('test1')->insert(array('id'=> 3, 'a' => 14)));
-        $this->assertTrue($this->db->table('test1')->insert(array('id'=> 4, 'a' => 6)));
-        $this->assertTrue($this->db->table('test1')->insert(array('id'=> 5, 'a' => 12)));
+        $this->assertTrue($this->db->table('test1')->insert(['id'=> 1, 'a' => 5]));
+        $this->assertTrue($this->db->table('test1')->insert(['id'=> 2, 'a' => 1]));
+        $this->assertTrue($this->db->table('test1')->insert(['id'=> 3, 'a' => 14]));
+        $this->assertTrue($this->db->table('test1')->insert(['id'=> 4, 'a' => 6]));
+        $this->assertTrue($this->db->table('test1')->insert(['id'=> 5, 'a' => 12]));
 
-        $this->assertTrue($this->db->table('test2')->insert(array('foreign_key'=> 1, 'b' => 185)));
-        $this->assertTrue($this->db->table('test2')->insert(array('foreign_key'=> 2, 'b' => 146)));
-        $this->assertTrue($this->db->table('test2')->insert(array('foreign_key'=> 3, 'b' => 185)));
-        $this->assertTrue($this->db->table('test2')->insert(array('foreign_key'=> 4, 'b' => 34)));
-        $this->assertTrue($this->db->table('test2')->insert(array('foreign_key'=> 5, 'b' => 121)));
+        $this->assertTrue($this->db->table('test2')->insert(['foreign_key'=> 1, 'b' => 185]));
+        $this->assertTrue($this->db->table('test2')->insert(['foreign_key'=> 2, 'b' => 146]));
+        $this->assertTrue($this->db->table('test2')->insert(['foreign_key'=> 3, 'b' => 185]));
+        $this->assertTrue($this->db->table('test2')->insert(['foreign_key'=> 4, 'b' => 34]));
+        $this->assertTrue($this->db->table('test2')->insert(['foreign_key'=> 5, 'b' => 121]));
 
         $subQuery = $this->db
             ->table('test2')
@@ -808,22 +807,22 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    public function testInnerJoinSubquery()
+    public function testInnerJoinSubquery(): void
     {
         $this->assertNotFalse($this->db->execute('CREATE TABLE test1 (id INTEGER NOT NULL, a INTEGER NOT NULL)'));
         $this->assertNotFalse($this->db->execute('CREATE TABLE test2 (foreign_key INTEGER NOT NULL, b INTEGER)'));
 
-        $this->assertTrue($this->db->table('test1')->insert(array('id'=> 1, 'a' => 5)));
-        $this->assertTrue($this->db->table('test1')->insert(array('id'=> 2, 'a' => 1)));
-        $this->assertTrue($this->db->table('test1')->insert(array('id'=> 3, 'a' => 14)));
-        $this->assertTrue($this->db->table('test1')->insert(array('id'=> 4, 'a' => 6)));
-        $this->assertTrue($this->db->table('test1')->insert(array('id'=> 5, 'a' => 12)));
+        $this->assertTrue($this->db->table('test1')->insert(['id'=> 1, 'a' => 5]));
+        $this->assertTrue($this->db->table('test1')->insert(['id'=> 2, 'a' => 1]));
+        $this->assertTrue($this->db->table('test1')->insert(['id'=> 3, 'a' => 14]));
+        $this->assertTrue($this->db->table('test1')->insert(['id'=> 4, 'a' => 6]));
+        $this->assertTrue($this->db->table('test1')->insert(['id'=> 5, 'a' => 12]));
 
-        $this->assertTrue($this->db->table('test2')->insert(array('foreign_key'=> 1, 'b' => 185)));
-        $this->assertTrue($this->db->table('test2')->insert(array('foreign_key'=> 2, 'b' => 146)));
-        $this->assertTrue($this->db->table('test2')->insert(array('foreign_key'=> 3, 'b' => 185)));
-        $this->assertTrue($this->db->table('test2')->insert(array('foreign_key'=> 4, 'b' => 34)));
-        $this->assertTrue($this->db->table('test2')->insert(array('foreign_key'=> 5, 'b' => 121)));
+        $this->assertTrue($this->db->table('test2')->insert(['foreign_key'=> 1, 'b' => 185]));
+        $this->assertTrue($this->db->table('test2')->insert(['foreign_key'=> 2, 'b' => 146]));
+        $this->assertTrue($this->db->table('test2')->insert(['foreign_key'=> 3, 'b' => 185]));
+        $this->assertTrue($this->db->table('test2')->insert(['foreign_key'=> 4, 'b' => 34]));
+        $this->assertTrue($this->db->table('test2')->insert(['foreign_key'=> 5, 'b' => 121]));
 
         $subQuery = $this->db
             ->table('test2')
@@ -852,7 +851,7 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    public function testJsonEq()
+    public function testJsonEq(): void
     {
         $this->assertNotFalse($this->db->execute('CREATE TABLE foobar (label TEXT, data TEXT)'));
         $this->assertTrue($this->db->table('foobar')->insert(['label' => 'first',  'data' => '{"user":"alice","address":{"city":"NYC"}}']));
@@ -869,7 +868,7 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
         $this->assertFalse($this->db->table('foobar')->jsonEq('data', 'user', 'charlie')->findOneColumn('label'));
     }
 
-    public function testJsonNeq()
+    public function testJsonNeq(): void
     {
         $this->assertNotFalse($this->db->execute('CREATE TABLE foobar (label TEXT, data TEXT)'));
         $this->assertTrue($this->db->table('foobar')->insert(['label' => 'first',  'data' => '{"user":"alice"}']));
@@ -880,7 +879,7 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(2, $this->db->table('foobar')->jsonNeq('data', 'user', 'charlie')->count());
     }
 
-    public function testJsonContainsOnColumn()
+    public function testJsonContainsOnColumn(): void
     {
         $this->assertNotFalse($this->db->execute('CREATE TABLE foobar (label TEXT, tags TEXT)'));
         $this->assertTrue($this->db->table('foobar')->insert(['label' => 'first',  'tags' => '["php","js","mysql"]']));
@@ -892,7 +891,7 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(0, $this->db->table('foobar')->jsonContains('tags', ['php', 'python'])->count());
     }
 
-    public function testJsonContainsWithPath()
+    public function testJsonContainsWithPath(): void
     {
         $this->assertNotFalse($this->db->execute('CREATE TABLE foobar (label TEXT, data TEXT)'));
         $this->assertTrue($this->db->table('foobar')->insert(['label' => 'first',  'data' => '{"tags":["php","js","mysql"]}']));
@@ -906,7 +905,7 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(0, $this->db->table('foobar')->jsonContains('data', ['php', 'python'], 'tags')->count());
     }
 
-    public function testJsonNotContainsOnColumn()
+    public function testJsonNotContainsOnColumn(): void
     {
         $this->assertNotFalse($this->db->execute('CREATE TABLE foobar (label TEXT, tags TEXT)'));
         $this->assertTrue($this->db->table('foobar')->insert(['label' => 'first',  'tags' => '["php","js","mysql"]']));
@@ -918,7 +917,7 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(2, $this->db->table('foobar')->jsonNotContains('tags', ['php', 'python'])->count());
     }
 
-    public function testJsonNotContainsWithPath()
+    public function testJsonNotContainsWithPath(): void
     {
         $this->assertNotFalse($this->db->execute('CREATE TABLE foobar (label TEXT, data TEXT)'));
         $this->assertTrue($this->db->table('foobar')->insert(['label' => 'first',  'data' => '{"tags":["php","js","mysql"]}']));
@@ -929,7 +928,7 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(2, $this->db->table('foobar')->jsonNotContains('data', ['php', 'python'], 'tags')->count());
     }
 
-    public function testJsonContainsEmptyValues()
+    public function testJsonContainsEmptyValues(): void
     {
         $this->assertNotFalse($this->db->execute('CREATE TABLE foobar (label TEXT, tags TEXT)'));
         $this->assertTrue($this->db->table('foobar')->insert(['label' => 'first',  'tags' => '["php","js","mysql"]']));
@@ -941,7 +940,7 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(2, $this->db->table('foobar')->jsonNotContains('tags', [])->count());
     }
 
-    public function testHashTable()
+    public function testHashTable(): void
     {
         $this->assertNotFalse($this->db->execute(
             'CREATE TABLE toto (
@@ -950,45 +949,45 @@ class SqliteTableTest extends \PHPUnit\Framework\TestCase
             )'
         ));
 
-        $this->assertTrue($this->db->table('toto')->insert(array('column1' => 'option1', 'column2' => 'value1')));
-        $this->assertTrue($this->db->table('toto')->insert(array('column1' => 'option2', 'column2' => 'value2')));
-        $this->assertTrue($this->db->table('toto')->insert(array('column1' => 'option3', 'column2' => 'value3')));
+        $this->assertTrue($this->db->table('toto')->insert(['column1' => 'option1', 'column2' => 'value1']));
+        $this->assertTrue($this->db->table('toto')->insert(['column1' => 'option2', 'column2' => 'value2']));
+        $this->assertTrue($this->db->table('toto')->insert(['column1' => 'option3', 'column2' => 'value3']));
 
-        $values = array(
+        $values = [
             'option1' => 'hey',
             'option4' => 'ho',
-        );
+        ];
 
         $this->assertTrue($this->db->hashtable('toto')->columnKey('column1')->columnValue('column2')->put($values));
 
         $this->assertEquals(
-            array('option2' => 'value2', 'option4' => 'ho'),
+            ['option2' => 'value2', 'option4' => 'ho'],
             $this->db->hashtable('toto')->columnKey('column1')->columnValue('column2')->get('option2', 'option4')
         );
 
         $this->assertEquals(
-            array('option2' => 'value2', 'option3' => 'value3', 'option1' => 'hey', 'option4' => 'ho'),
+            ['option2' => 'value2', 'option3' => 'value3', 'option1' => 'hey', 'option4' => 'ho'],
             $this->db->hashtable('toto')->columnKey('column1')->columnValue('column2')->get()
         );
 
         $this->assertEquals(
-            array('option2' => 'value2', 'option3' => 'value3', 'option1' => 'hey', 'option4' => 'ho'),
+            ['option2' => 'value2', 'option3' => 'value3', 'option1' => 'hey', 'option4' => 'ho'],
             $this->db->hashtable('toto')->getAll('column1', 'column2')
         );
     }
 
-    public function testHashTableSkipsRowsWithNullKey()
+    public function testHashTableSkipsRowsWithNullKey(): void
     {
         $this->assertNotFalse($this->db->execute(
             'CREATE TABLE toto (column1 TEXT, column2 TEXT)'
         ));
 
-        $this->assertTrue($this->db->table('toto')->insert(array('column1' => 'a', 'column2' => 'value_a')));
-        $this->assertTrue($this->db->table('toto')->insert(array('column1' => null, 'column2' => 'value_null')));
-        $this->assertTrue($this->db->table('toto')->insert(array('column1' => 'b', 'column2' => 'value_b')));
+        $this->assertTrue($this->db->table('toto')->insert(['column1' => 'a', 'column2' => 'value_a']));
+        $this->assertTrue($this->db->table('toto')->insert(['column1' => null, 'column2' => 'value_null']));
+        $this->assertTrue($this->db->table('toto')->insert(['column1' => 'b', 'column2' => 'value_b']));
 
         $this->assertEquals(
-            array('a' => 'value_a', 'b' => 'value_b'),
+            ['a' => 'value_a', 'b' => 'value_b'],
             $this->db->hashtable('toto')->columnKey('column1')->columnValue('column2')->get()
         );
     }

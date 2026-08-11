@@ -7,22 +7,19 @@ use PHPUnit\Framework\TestCase;
 
 class StatementHandlerTest extends TestCase
 {
-    /**
-     * @var Database
-     */
-    private $db;
+    private Database $db;
 
-    private $statementHandler;
+    private StatementHandler $statementHandler;
 
     protected function setUp(): void
     {
-        $this->db = new Database(array('driver' => 'sqlite', 'filename' => ':memory:'));
+        $this->db = new Database(['driver' => 'sqlite', 'filename' => ':memory:']);
         $this->statementHandler = new StatementHandler($this->db);
         parent::setUp();
     }
 
 
-    public function testBeforeExecuteLogs()
+    public function testBeforeExecuteLogs(): void
     {
         // create an anon class that extends statement handler
         $statementHandler = new class($this->db) extends StatementHandler {
@@ -38,9 +35,8 @@ class StatementHandlerTest extends TestCase
              *      'positionalParams': array,
              *      'namedParams': array
              *     } $props
-             * @return void
              */
-            public function testBeforeExecute(array $props)
+            public function testBeforeExecute(array $props): void
             {
                 foreach ($props as $key => $value) {
                     $this->{$key} = $value;
@@ -106,10 +102,10 @@ class StatementHandlerTest extends TestCase
         );
     }
 
-    public function testMoreValuesThanPlaceholders()
+    public function testMoreValuesThanPlaceholders(): void
     {
         $statementHandler = new class($this->db) extends StatementHandler {
-            public function testBeforeExecute(array $props)
+            public function testBeforeExecute(array $props): void
             {
                 foreach ($props as $key => $value) {
                     $this->{$key} = $value;

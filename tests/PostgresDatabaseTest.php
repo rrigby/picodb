@@ -1,22 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
+use PHPUnit\Framework\TestCase;
+use PicoDb\SQLException;
+
 use PicoDb\Database;
 
-class PostgresDatabaseTest extends \PHPUnit\Framework\TestCase
+class PostgresDatabaseTest extends TestCase
 {
-    /**
-     * @var PicoDb\Database
-     */
-    private $db;
+    private Database $db;
 
     public function setUp(): void
     {
-        $this->db = new Database(array('driver' => 'postgres', 'hostname' => getenv('POSTGRES_HOST'), 'username' => 'root', 'password' => 'rootpassword', 'database' => 'picodb'));
+        $this->db = new Database(['driver' => 'postgres', 'hostname' => getenv('POSTGRES_HOST'), 'username' => 'root', 'password' => 'rootpassword', 'database' => 'picodb']);
         $this->db->getConnection()->exec('DROP TABLE IF EXISTS foobar');
         $this->db->getConnection()->exec('DROP TABLE IF EXISTS schema_version');
     }
 
-    public function testEscapeIdentifer()
+    public function testEscapeIdentifer(): void
     {
         $this->assertEquals('"a"', $this->db->escapeIdentifier('a'));
         $this->assertEquals('a.b', $this->db->escapeIdentifier('a.b'));
@@ -26,72 +28,72 @@ class PostgresDatabaseTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals('SELECT COUNT(*) FROM test', $this->db->escapeIdentifier('SELECT COUNT(*) FROM test', 'b'));
     }
 
-    public function testEscapeIdentiferList()
+    public function testEscapeIdentiferList(): void
     {
-        $this->assertEquals(array('"c"."a"', '"c"."b"'), $this->db->escapeIdentifierList(array('a', 'b'), 'c'));
-        $this->assertEquals(array('"a"', 'd.b'), $this->db->escapeIdentifierList(array('a', 'd.b')));
+        $this->assertEquals(['"c"."a"', '"c"."b"'], $this->db->escapeIdentifierList(['a', 'b'], 'c'));
+        $this->assertEquals(['"a"', 'd.b'], $this->db->escapeIdentifierList(['a', 'd.b']));
     }
 
-    public function testThatPreparedStatementWorks()
+    public function testThatPreparedStatementWorks(): void
     {
         $this->db->getConnection()->exec('CREATE TABLE foobar (id serial PRIMARY KEY, something TEXT)');
-        $this->db->execute('INSERT INTO foobar (something) VALUES (?)', array('a'));
+        $this->db->execute('INSERT INTO foobar (something) VALUES (?)', ['a']);
         $this->assertEquals(1, $this->db->getLastId());
-        $this->assertEquals('a', $this->db->execute('SELECT something FROM foobar WHERE something=?', array('a'))->fetchColumn());
+        $this->assertEquals('a', $this->db->execute('SELECT something FROM foobar WHERE something=?', ['a'])->fetchColumn());
     }
 
-    public function testBadSQLQuery()
+    public function testBadSQLQuery(): void
     {
-        $this->expectException(\PicoDb\SQLException::class);
+        $this->expectException(SQLException::class);
 
         $this->db->execute('INSERT INTO foobar');
     }
 
-    public function testDuplicateKey()
+    public function testDuplicateKey(): void
     {
-        $this->expectException(\PicoDb\SQLException::class);
+        $this->expectException(SQLException::class);
 
         $this->db->getConnection()->exec('CREATE TABLE foobar (something TEXT UNIQUE)');
 
-        $this->assertNotFalse($this->db->execute('INSERT INTO foobar (something) VALUES (?)', array('a')));
-        $this->db->execute('INSERT INTO foobar (something) VALUES (?)', array('a'));
+        $this->assertNotFalse($this->db->execute('INSERT INTO foobar (something) VALUES (?)', ['a']));
+        $this->db->execute('INSERT INTO foobar (something) VALUES (?)', ['a']);
     }
 
-    public function testThatTransactionReturnsAValue()
+    public function testThatTransactionReturnsAValue(): void
     {
-        $this->assertEquals('a', $this->db->transaction(function (Database $db) {
+        $this->assertEquals('a', $this->db->transaction(function (Database $db): string|int|null|false {
             $db->getConnection()->exec('CREATE TABLE foobar (something TEXT UNIQUE)');
-            $db->execute('INSERT INTO foobar (something) VALUES (?)', array('a'));
+            $db->execute('INSERT INTO foobar (something) VALUES (?)', ['a']);
 
-            return $db->execute('SELECT something FROM foobar WHERE something=?', array('a'))->fetchColumn();
+            return $db->execute('SELECT something FROM foobar WHERE something=?', ['a'])->fetchColumn();
         }));
     }
 
-    public function testThatTransactionReturnsTrue()
+    public function testThatTransactionReturnsTrue(): void
     {
-        $this->assertTrue($this->db->transaction(function (Database $db) {
+        $this->assertTrue($this->db->transaction(function (Database $db): void {
             $db->getConnection()->exec('CREATE TABLE foobar (something TEXT UNIQUE)');
-            $db->execute('INSERT INTO foobar (something) VALUES (?)', array('a'));
+            $db->execute('INSERT INTO foobar (something) VALUES (?)', ['a']);
         }));
     }
 
-    public function testThatTransactionThrowExceptionWhenRollbacked()
+    public function testThatTransactionThrowExceptionWhenRollbacked(): void
     {
-        $this->expectException(\PicoDb\SQLException::class);
+        $this->expectException(SQLException::class);
 
-        $this->assertFalse($this->db->transaction(function (Database $db) {
+        $this->assertFalse($this->db->transaction(function (Database $db): void {
             $db->getConnection()->exec('CREATE TABL');
         }));
     }
 
-    public function testThatTransactionReturnsFalseWhithDuplicateKey()
+    public function testThatTransactionReturnsFalseWhithDuplicateKey(): void
     {
-        $this->expectException(\PicoDb\SQLException::class);
+        $this->expectException(SQLException::class);
 
-        $this->db->transaction(function (Database $db) {
+        $this->db->transaction(function (Database $db): bool {
             $db->getConnection()->exec('CREATE TABLE foobar (something TEXT UNIQUE)');
-            $r1 = $db->execute('INSERT INTO foobar (something) VALUES (?)', array('a'));
-            $r2 = $db->execute('INSERT INTO foobar (something) VALUES (?)', array('a'));
+            $r1 = $db->execute('INSERT INTO foobar (something) VALUES (?)', ['a']);
+            $r2 = $db->execute('INSERT INTO foobar (something) VALUES (?)', ['a']);
             return $r1 && $r2;
         });
     }

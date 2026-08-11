@@ -16,7 +16,7 @@ class Postgres extends Base
     /**
      * List of required settings options
      *
-     * @access protected
+     * @var string[]
      */
     protected array $requiredAttributes = [
         'database',
@@ -24,23 +24,18 @@ class Postgres extends Base
 
     /**
      * Table to store the schema version
-     *
-     * @access private
      */
     private string $schemaTable = 'schema_version';
 
     /**
      * Create a new PDO connection
-     *
-     * @access public
-     * @param  array   $settings
      */
-    public function createConnection(array $settings)
+    public function createConnection(array $settings): void
     {
         $dsn = 'pgsql:dbname='.$settings['database'];
         $username = null;
         $password = null;
-        $options = array();
+        $options = [];
 
         if (! empty($settings['username'])) {
             $username = $settings['username'];
@@ -71,30 +66,24 @@ class Postgres extends Base
 
     /**
      * Enable foreign keys
-     *
-     * @access public
      */
-    public function enableForeignKeys()
+    public function enableForeignKeys(): void
     {
     }
 
     /**
      * Disable foreign keys
-     *
-     * @access public
      */
-    public function disableForeignKeys()
+    public function disableForeignKeys(): void
     {
     }
 
     /**
      * Return true if the error code is a duplicate key
      *
-     * @access public
      * @param  integer  $code
-     * @return boolean
      */
-    public function isDuplicateKeyError($code)
+    public function isDuplicateKeyError($code): bool
     {
         return $code == 23505 || $code == 23503;
     }
@@ -102,11 +91,9 @@ class Postgres extends Base
     /**
      * Escape identifier
      *
-     * @access public
      * @param  string  $identifier
-     * @return string
      */
-    public function escape($identifier)
+    public function escape($identifier): string
     {
         return '"'.$identifier.'"';
     }
@@ -114,16 +101,14 @@ class Postgres extends Base
     /**
      * Get non standard operator
      *
-     * @access public
      * @param  string  $operator
-     * @return string
      */
-    public function getOperator($operator)
+    public function getOperator($operator): string
     {
         if ($operator === 'LIKE') {
             return 'LIKE';
         }
-        else if ($operator === 'ILIKE') {
+        if ($operator === 'ILIKE') {
             return 'ILIKE';
         }
 
@@ -149,8 +134,6 @@ class Postgres extends Base
 
     /**
      * Get last inserted id
-     *
-     * @access public
      */
     public function getLastId(): string|false
     {
@@ -160,18 +143,15 @@ class Postgres extends Base
 
             return (string) $rq->fetchColumn();
         }
-        catch (PDOException $e) {
+        catch (PDOException) {
             return false;
         }
     }
 
     /**
      * Get current schema version
-     *
-     * @access public
-     * @return integer
      */
-    public function getSchemaVersion()
+    public function getSchemaVersion(): int
     {
         $this->getConnection()->exec("CREATE TABLE IF NOT EXISTS ".$this->schemaTable." (version INTEGER DEFAULT 0)");
 
@@ -182,9 +162,7 @@ class Postgres extends Base
         if ($result !== false) {
             return (int) $result;
         }
-        else {
-            $this->getConnection()->exec('INSERT INTO '.$this->schemaTable.' VALUES(0)');
-        }
+        $this->getConnection()->exec('INSERT INTO '.$this->schemaTable.' VALUES(0)');
 
         return 0;
     }
@@ -192,34 +170,28 @@ class Postgres extends Base
     /**
      * Set current schema version
      *
-     * @access public
      * @param  integer  $version
      */
-    public function setSchemaVersion($version)
+    public function setSchemaVersion($version): void
     {
         $rq = $this->getConnection()->prepare('UPDATE '.$this->schemaTable.' SET version=?');
-        $rq->execute(array($version));
+        $rq->execute([$version]);
     }
 
     /**
      * Run EXPLAIN command
      *
      * @param  string $sql
-     * @param  array  $values
-     * @return array
      */
-    public function explain($sql, array $values)
+    public function explain($sql, array $values): array
     {
         return $this->getConnection()->query('EXPLAIN (FORMAT YAML) '.$this->getSqlFromPreparedStatement($sql, $values))->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
      * Get database version
-     *
-     * @access public
-     * @return array
      */
-    public function getDatabaseVersion()
+    public function getDatabaseVersion(): mixed
     {
         return $this->getConnection()->query('SHOW server_version')->fetchColumn();
     }

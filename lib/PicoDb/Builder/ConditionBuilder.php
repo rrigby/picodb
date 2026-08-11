@@ -3,7 +3,6 @@
 namespace PicoDb\Builder;
 
 use PicoDb\Database;
-use PicoDb\Table;
 
 /**
  * Class ConditionBuilder
@@ -15,9 +14,6 @@ class ConditionBuilder extends BaseConditionBuilder implements BuilderInterface
 {
     /**
      * Constructor
-     *
-     * @access public
-     * @param  Database  $db
      */
     public function __construct(Database $db)
     {
@@ -26,11 +22,8 @@ class ConditionBuilder extends BaseConditionBuilder implements BuilderInterface
 
     /**
      * Build the SQL condition
-     *
-     * @access public
-     * @return string
      */
-    public function build()
+    public function build(): string
     {
         return empty($this->conditions) ? '' : ' WHERE '.implode(' AND ', $this->conditions);
     }

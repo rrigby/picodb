@@ -2,6 +2,8 @@
 
 namespace PicoDb;
 
+use PDO;
+use PDOStatement;
 use Closure;
 use PDOException;
 use LogicException;
@@ -22,41 +24,30 @@ class Database
      * Database instances
      *
      * @static
-     * @access private
-     * @var array
      */
-    private static $instances = array();
+    private static array $instances = [];
 
     /**
      * Statement object
-     *
-     * @access protected
-     * @var StatementHandler
      */
-    protected $statementHandler;
+    protected StatementHandler $statementHandler;
 
     /**
      * Queries logs
      *
-     * @access private
-     * @var array
+     * @var string[]|mixed[]
      */
-    private $logs = array();
+    private array $logs = [];
 
     /**
      * Driver instance
-     *
-     * @access private
      */
-    private $driver;
+    private Sqlite|Mssql|Mysql|Postgres $driver;
 
     /**
      * Initialize the driver
-     *
-     * @access public
-     * @param  array   $settings
      */
-    public function __construct(array $settings = array())
+    public function __construct(array $settings = [])
     {
         $this->driver = DriverFactory::getDriver($settings);
         $this->statementHandler = new StatementHandler($this);
@@ -64,23 +55,21 @@ class Database
 
     /**
      * Destructor
-     *
-     * @access public
      */
     public function __destruct()
     {
         $this->closeConnection();
     }
 
+
     /**
      * Register a new database instance
      *
      * @static
-     * @access public
      * @param  string    $name        Instance name
      * @param  Closure   $callback    Callback
      */
-    public static function setInstance($name, Closure $callback)
+    public static function setInstance($name, Closure $callback): void
     {
         self::$instances[$name] = $callback;
     }
@@ -88,12 +77,9 @@ class Database
     /**
      * Get a database instance
      *
-     * @static
-     * @access public
      * @param  string    $name   Instance name
-     * @return Database
      */
-    public static function getInstance($name)
+    public static function getInstance($name): self
     {
         if (! isset(self::$instances[$name])) {
             throw new LogicException('No database instance created with that name');
@@ -109,11 +95,9 @@ class Database
     /**
      * Add a log message
      *
-     * @access public
      * @param  mixed $message
-     * @return Database
      */
-    public function setLogMessage($message)
+    public function setLogMessage($message): static
     {
         $this->logs[] = is_array($message) ? var_export($message, true) : $message;
         return $this;
@@ -121,12 +105,8 @@ class Database
 
     /**
      * Add many log messages
-     *
-     * @access public
-     * @param  array $messages
-     * @return Database
      */
-    public function setLogMessages(array $messages)
+    public function setLogMessages(array $messages): static
     {
         foreach ($messages as $message) {
             $this->setLogMessage($message);
@@ -137,65 +117,48 @@ class Database
 
     /**
      * Get all queries logs
-     *
-     * @access public
-     * @return array
      */
-    public function getLogMessages()
+    public function getLogMessages(): array
     {
         return $this->logs;
     }
 
     /**
      * Get the PDO connection
-     *
-     * @access public
-     * @return \PDO
      */
-    public function getConnection()
+    public function getConnection(): PDO
     {
         return $this->driver->getConnection();
     }
 
     /**
      * Get the Driver instance
-     *
-     * @access public
-     * @return Mssql|Sqlite|Postgres|Mysql
      */
-    public function getDriver()
+    public function getDriver(): Sqlite|Mssql|Mysql|Postgres
     {
         return $this->driver;
     }
 
     /**
      * Get the last inserted id
-     *
-     * @access public
-     * @return integer
      */
-    public function getLastId()
+    public function getLastId(): int
     {
         return (int) $this->driver->getLastId();
     }
 
     /**
      * Get statement object
-     *
-     * @access public
-     * @return StatementHandler
      */
-    public function getStatementHandler()
+    public function getStatementHandler(): StatementHandler
     {
         return $this->statementHandler;
     }
 
     /**
      * Release the PDO connection
-     *
-     * @access public
      */
-    public function closeConnection()
+    public function closeConnection(): void
     {
         $this->driver->closeConnection();
     }
@@ -203,15 +166,13 @@ class Database
     /**
      * Escape an identifier (column, table name...)
      *
-     * @access public
      * @param  string    $value    Value
      * @param  string    $table    Table name
-     * @return string
      */
-    public function escapeIdentifier($value, $table = '')
+    public function escapeIdentifier($value, $table = ''): string
     {
         // Do not escape custom query
-        if (strpos($value, '.') !== false || strpos($value, ' ') !== false) {
+        if (str_contains($value, '.') || str_contains($value, ' ')) {
             return $value;
         }
 
@@ -225,12 +186,11 @@ class Database
     /**
      * Escape an identifier list
      *
-     * @access public
      * @param  array     $identifiers  List of identifiers
      * @param  string    $table        Table name
      * @return string[]
      */
-    public function escapeIdentifierList(array $identifiers, $table = '')
+    public function escapeIdentifierList(array $identifiers, $table = ''): array
     {
         foreach ($identifiers as $key => $value) {
             $identifiers[$key] = $this->escapeIdentifier($value, $table);
@@ -242,13 +202,11 @@ class Database
     /**
      * Execute a prepared statement
      *
-     * @access public
      * @param  string    $sql      SQL query
      * @param  array     $values   Values
-     * @return \PDOStatement
      * @throws SQLException
      */
-    public function execute($sql, array $values = array())
+    public function execute(string $sql, array $values = []): PDOStatement
     {
         return $this->statementHandler
             ->withSql($sql)
@@ -259,11 +217,9 @@ class Database
     /**
      * Run a transaction
      *
-     * @access public
      * @param  Closure    $callback     Callback
-     * @return mixed
      */
-    public function transaction(Closure $callback)
+    public function transaction(Closure $callback): mixed
     {
         try {
 
@@ -271,7 +227,7 @@ class Database
             $result = $callback($this);
             $this->closeTransaction();
 
-            return $result === null ? true : $result;
+            return $result ?? true;
         } catch (PDOException $e) {
             $this->statementHandler->handleSqlError($e);
         }
@@ -279,22 +235,16 @@ class Database
 
     /**
      * Checks if inside a transaction
-     *
-     * @access public
-     * @return bool
      */
-    public function inTransaction()
+    public function inTransaction(): bool
     {
         return $this->getConnection()->inTransaction();
     }
 
     /**
      * Begin a transaction
-     *
-     * @access public
-     * @return bool
      */
-    public function startTransaction()
+    public function startTransaction(): bool
     {
         if (! $this->inTransaction()) {
             return $this->getConnection()->beginTransaction();
@@ -305,11 +255,8 @@ class Database
 
     /**
      * Commit a transaction
-     *
-     * @access public
-     * @return bool
      */
-    public function closeTransaction()
+    public function closeTransaction(): bool
     {
         if ($this->inTransaction()) {
             return $this->getConnection()->commit();
@@ -320,11 +267,8 @@ class Database
 
     /**
      * Rollback a transaction
-     *
-     * @access public
-     * @return bool
      */
-    public function cancelTransaction()
+    public function cancelTransaction(): bool
     {
         if ($this->inTransaction()) {
             return $this->getConnection()->rollBack();
@@ -336,11 +280,9 @@ class Database
     /**
      * Get a table object
      *
-     * @access public
      * @param  string $table
-     * @return Table
      */
-    public function table($table)
+    public function table($table): Table
     {
         return new Table($this, $table);
     }
@@ -348,11 +290,9 @@ class Database
     /**
      * Get a hashtable object
      *
-     * @access public
      * @param  string $table
-     * @return Hashtable
      */
-    public function hashtable($table)
+    public function hashtable($table): Hashtable
     {
         return new Hashtable($this, $table);
     }
@@ -360,11 +300,9 @@ class Database
     /**
      * Get a LOB object
      *
-     * @access public
      * @param  string $table
-     * @return LargeObject
      */
-    public function largeObject($table)
+    public function largeObject($table): LargeObject
     {
         return new LargeObject($this, $table);
     }
@@ -372,11 +310,9 @@ class Database
     /**
      * Get a schema object
      *
-     * @access public
      * @param  string $namespace
-     * @return Schema
      */
-    public function schema($namespace = null)
+    public function schema($namespace = null): Schema
     {
         $schema = new Schema($this);
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PicoDb;
 
 use LogicException;
@@ -19,27 +21,20 @@ class DriverFactory
     /**
      * Get database driver from settings or environment URL
      *
-     * @access public
-     * @param  array $settings
-     * @return Mssql|Mysql|Postgres|Sqlite
+     * @param array<string, mixed> $settings
      */
-    public static function getDriver(array $settings)
+    public static function getDriver(array $settings): Sqlite|Mssql|Mysql|Postgres
     {
         if (! isset($settings['driver'])) {
             throw new LogicException('You must define a database driver');
         }
 
-        switch ($settings['driver']) {
-            case 'sqlite':
-                return new Sqlite($settings);
-            case 'mssql':
-                return new Mssql($settings);
-            case 'mysql':
-                return new Mysql($settings);
-            case 'postgres':
-                return new Postgres($settings);
-            default:
-                throw new LogicException('This database driver is not supported');
-        }
+        return match ($settings['driver']) {
+            'sqlite' => new Sqlite($settings),
+            'mssql' => new Mssql($settings),
+            'mysql' => new Mysql($settings),
+            'postgres' => new Postgres($settings),
+            default => throw new LogicException('This database driver is not supported'),
+        };
     }
 }

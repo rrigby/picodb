@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PicoDb\Builder;
 
 use PicoDb\Database;
@@ -12,60 +14,32 @@ use PicoDb\Database;
  */
 abstract class BaseBuilder
 {
-    /**
-     * @var Database
-     */
-    protected $db;
-
-    /**
-     * @var ConditionBuilder
-     */
-    protected $conditionBuilder;
-
-    /**
-     * @var string
-     */
-    protected $table = '';
+    protected string $table = '';
 
     /**
      * @var string[]
      */
-    protected $columns = array();
+    protected array $columns = [];
 
     /**
      * InsertBuilder constructor
-     *
-     * @param Database         $db
-     * @param ConditionBuilder $condition
      */
-    public function __construct(Database $db, ConditionBuilder $condition)
+    public function __construct(protected Database $db, protected ConditionBuilder $conditionBuilder)
     {
-        $this->db = $db;
-        $this->conditionBuilder = $condition;
     }
 
     /**
      * Get object instance
-     *
-     * @static
-     * @access public
-     * @param  Database         $db
-     * @param  ConditionBuilder $condition
-     * @return static
      */
-    public static function getInstance(Database $db, ConditionBuilder $condition)
+    public static function getInstance(Database $db, ConditionBuilder $condition): static
     {
         return new static($db, $condition);
     }
 
     /**
      * Set table name
-     *
-     * @access public
-     * @param  string $table
-     * @return $this
      */
-    public function withTable($table)
+    public function withTable(string $table): static
     {
         $this->table = $table;
         return $this;
@@ -74,11 +48,9 @@ abstract class BaseBuilder
     /**
      * Set columns name
      *
-     * @access public
      * @param  string[] $columns
-     * @return $this
      */
-    public function withColumns(array $columns)
+    public function withColumns(array $columns): static
     {
         $this->columns = $columns;
         return $this;

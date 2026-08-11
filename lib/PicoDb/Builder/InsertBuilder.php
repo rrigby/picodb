@@ -12,14 +12,11 @@ class InsertBuilder extends BaseBuilder implements BuilderInterface
 {
     /**
      * Build SQL
-     *
-     * @access public
-     * @return string
      */
-    public function build()
+    public function build(): string
     {
-        $columns = array();
-        $placeholders = array();
+        $columns = [];
+        $placeholders = [];
 
         foreach ($this->columns as $column) {
             $columns[] = $this->db->escapeIdentifier($column);
