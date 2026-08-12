@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PicoDb;
 
 use PDO;
@@ -266,7 +268,6 @@ class Table
      * Fetch one column, first row
      *
      * @param  string   $column
-     * @return string|bool returns false if there are 0 results to get a column from.
      */
     public function findOneColumn($column): string|int|null|false
     {
@@ -595,8 +596,6 @@ class Table
 
     /**
      * Limit
-     *
-     * @param  integer   $value
      */
     public function limit($value): static
     {
@@ -609,8 +608,6 @@ class Table
 
     /**
      * Offset
-     *
-     * @param  integer   $value
      */
     public function offset($value): static
     {
@@ -756,7 +753,7 @@ class Table
     /**
      * Wrap conditions with AND logic using a callback
      *
-     * @param Closure(static) $callback
+     * @param Closure(static):mixed $callback
      */
     public function and(Closure $callback): static
     {
@@ -769,7 +766,7 @@ class Table
     /**
      * Wrap conditions with OR logic using a callback
      *
-     * @param Closure(static) $callback
+     * @param Closure(static):mixed $callback
      */
     public function or(Closure $callback): static
     {
@@ -785,7 +782,7 @@ class Table
      * Unlike and/or/xor, NOT always joins multiple conditions with AND internally.
      * To negate an OR group, nest or inside: not(fn($q) => $q->or(...))
      *
-     * @param Closure(static) $callback
+     * @param Closure(static):mixed $callback
      */
     public function not(Closure $callback): static
     {
@@ -800,7 +797,7 @@ class Table
      *
      * Only supported by MySQL and MSSQL. Not supported by SQLite or PostgreSQL.
      *
-     * @param Closure(static) $callback
+     * @param Closure(static):mixed $callback
      */
     public function xor(Closure $callback): static
     {

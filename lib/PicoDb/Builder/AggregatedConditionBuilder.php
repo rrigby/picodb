@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PicoDb\Builder;
 
 use PicoDb\Database;
@@ -25,6 +27,6 @@ class AggregatedConditionBuilder extends BaseConditionBuilder implements Builder
      */
     public function build(): string
     {
-        return empty($this->conditions) ? '' : ' HAVING '.implode(' AND ', $this->conditions);
+        return $this->conditions === [] ? '' : ' HAVING '.implode(' AND ', $this->conditions);
     }
 }

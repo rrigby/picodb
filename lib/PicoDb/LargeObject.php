@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PicoDb;
 
 use PDO;
@@ -114,7 +116,7 @@ class LargeObject extends Table
      * @param  string $blobColumn
      * @param  string $blobData
      */
-    public function insertFromString($blobColumn, &$blobData, array $data = []): bool
+    public function insertFromString($blobColumn, $blobData, array $data = []): bool
     {
         return $this->insertFromStream($blobColumn, $blobData, $data);
     }

@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
-use Rector\DeadCode\Rector\ClassLike\RemoveAnnotationRector;
 use Rector\TypeDeclaration\Rector\Property\TypedPropertyFromAssignsRector;
 use Rector\ValueObject\PhpVersion;
 
@@ -27,5 +26,4 @@ return RectorConfig::configure()
     ->withSkip([
         TypedPropertyFromAssignsRector::class => [__DIR__ . '/tests'],
     ])
-    ->withConfiguredRule(RemoveAnnotationRector::class, ['access'])
     ->withConfiguredRule(TypedPropertyFromAssignsRector::class, [TypedPropertyFromAssignsRector::INLINE_PUBLIC => true]);

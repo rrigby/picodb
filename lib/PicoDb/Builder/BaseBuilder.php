@@ -11,6 +11,8 @@ use PicoDb\Database;
  *
  * @package PicoDb\Builder
  * @author  Frederic Guillot
+ *
+ * @phpstan-consistent-constructor
  */
 abstract class BaseBuilder
 {

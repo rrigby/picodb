@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use PHPUnit\Framework\TestCase;
 use PicoDb\Database;
 use PicoDb\Table;
@@ -20,7 +22,7 @@ class PostgresTableTest extends TestCase
 
     public function testSelect(): void
     {
-        $this->assertEquals('SELECT 1 FROM "test"', $this->db->table('test')->select(1)->buildSelectQuery());
+        $this->assertEquals('SELECT 1 FROM "test"', $this->db->table('test')->select('1')->buildSelectQuery());
     }
 
     public function testColumns(): void
