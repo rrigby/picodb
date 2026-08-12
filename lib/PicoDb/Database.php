@@ -9,10 +9,7 @@ use PDOStatement;
 use Closure;
 use PDOException;
 use LogicException;
-use PicoDb\Driver\Mssql;
-use PicoDb\Driver\Sqlite;
-use PicoDb\Driver\Mysql;
-use PicoDb\Driver\Postgres;
+use PicoDb\Driver\Base;
 
 /**
  * Database
@@ -44,7 +41,7 @@ class Database
     /**
      * Driver instance
      */
-    private Sqlite|Mssql|Mysql|Postgres $driver;
+    private Base $driver;
 
     /**
      * Initialize the driver
@@ -136,9 +133,17 @@ class Database
     /**
      * Get the Driver instance
      */
-    public function getDriver(): Sqlite|Mssql|Mysql|Postgres
+    public function getDriver(): Base
     {
         return $this->driver;
+    }
+
+    /**
+     * Set the Driver instance
+     */
+    public function setDriver(Base $driver): void
+    {
+        $this->driver = $driver;
     }
 
     /**

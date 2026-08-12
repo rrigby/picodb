@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PicoDb;
 
 use LogicException;
+use PicoDb\Driver\Base;
 use PicoDb\Driver\Mssql;
 use PicoDb\Driver\Mysql;
 use PicoDb\Driver\Postgres;
@@ -23,7 +24,7 @@ class DriverFactory
      *
      * @param array<string, mixed> $settings
      */
-    public static function getDriver(array $settings): Sqlite|Mssql|Mysql|Postgres
+    public static function getDriver(array $settings): Base
     {
         if (! isset($settings['driver'])) {
             throw new LogicException('You must define a database driver');
