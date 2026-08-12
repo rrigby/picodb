@@ -1,0 +1,44 @@
+name: "PHPStan"
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: '*'
+  schedule:
+    - cron: '30 12 1,15 * *'
+
+jobs:
+  phpstan:
+    strategy:
+      matrix:
+        php-versions: [ '8.0', '8.1', '8.2', '8.3', '8.4' ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    name: PHPStan on PHP ${{ matrix.php-versions }}
+
+    steps:
+      - uses: actions/checkout@v6
+        name: Check Out Code
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-versions }}
+          extensions: pdo, pdo_mysql, pdo_pgsql, pdo_sqlite
+
+      - name: Cache Composer packages
+        id: composer-cache
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        if: steps.composer-cache.outputs.cache-hit != 'true'
+        run: composer install --prefer-dist --no-progress --no-suggest
+
+      - name: PHPStan
+        run: ./vendor/bin/phpstan analyse --error-format=github
