@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace PicoDb;
@@ -18,18 +19,16 @@ class StatementHandlerTest extends TestCase
         parent::setUp();
     }
 
-
     public function testBeforeExecuteLogs(): void
     {
         // create an anon class that extends statement handler
-        $statementHandler = new class($this->db) extends StatementHandler {
-
+        $statementHandler = new class ($this->db) extends StatementHandler {
             /**
              * A wrapper to set the state of the class before running the protected var.
              *
              * @param array{
-             *      'logQueries': boolean,
-             *      'logQueryValues': boolean,
+             *      'logQueries': bool,
+             *      'logQueryValues': bool,
              *      'sql': string,
              *      'lobParams': array,
              *      'positionalParams': array,
@@ -62,7 +61,6 @@ class StatementHandlerTest extends TestCase
             $logMessages[0],
             var_export($logMessages, true)
         );
-
 
         // now test with positional params
         $statementHandler->testBeforeExecute([
@@ -104,7 +102,7 @@ class StatementHandlerTest extends TestCase
 
     public function testMoreValuesThanPlaceholders(): void
     {
-        $statementHandler = new class($this->db) extends StatementHandler {
+        $statementHandler = new class ($this->db) extends StatementHandler {
             public function testBeforeExecute(array $props): void
             {
                 foreach ($props as $key => $value) {

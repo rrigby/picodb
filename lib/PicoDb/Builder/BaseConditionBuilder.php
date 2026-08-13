@@ -45,8 +45,7 @@ class BaseConditionBuilder
          * Database instance
          */
         protected Database $db
-    )
-    {
+    ) {
     }
 
     /**
@@ -69,15 +68,12 @@ class BaseConditionBuilder
 
     /**
      * Add custom condition
-     *
-     * @param  string  $sql
      */
-    public function addCondition($sql): void
+    public function addCondition(string $sql): void
     {
         if ($this->embeddedConditionOffset > 0) {
             $this->embeddedConditions[$this->embeddedConditionOffset]->withCondition($sql);
-        }
-        else {
+        } else {
             $this->conditions[] = $sql;
         }
     }
@@ -176,11 +172,8 @@ class BaseConditionBuilder
 
     /**
      * Equal condition
-     *
-     * @param  string   $column
-     * @param  mixed    $value
      */
-    public function eq($column, $value): void
+    public function eq(string $column, mixed $value): void
     {
         $this->addCondition($this->db->escapeIdentifier($column).' = ?');
         $this->values[] = $value;
@@ -188,11 +181,8 @@ class BaseConditionBuilder
 
     /**
      * Not equal condition
-     *
-     * @param  string   $column
-     * @param  mixed    $value
      */
-    public function neq($column, $value): void
+    public function neq(string $column, mixed $value): void
     {
         $this->addCondition($this->db->escapeIdentifier($column).' != ?');
         $this->values[] = $value;
@@ -200,10 +190,8 @@ class BaseConditionBuilder
 
     /**
      * IN condition
-     *
-     * @param  string   $column
      */
-    public function in($column, array $values): void
+    public function in(string $column, array $values): void
     {
         if ($values !== []) {
             $this->addCondition($this->db->escapeIdentifier($column).' IN ('.implode(', ', array_fill(0, count($values), '?')).')');
@@ -215,10 +203,8 @@ class BaseConditionBuilder
 
     /**
      * IN condition with a subquery
-     *
-     * @param  string   $column
      */
-    public function inSubquery($column, Table $subquery): void
+    public function inSubquery(string $column, Table $subquery): void
     {
         $this->addCondition($this->db->escapeIdentifier($column).' IN ('.$subquery->buildSelectQuery().')');
         $this->values = array_merge($this->values, $subquery->getValues());
@@ -226,10 +212,8 @@ class BaseConditionBuilder
 
     /**
      * NOT IN condition
-     *
-     * @param  string   $column
      */
-    public function notIn($column, array $values): void
+    public function notIn(string $column, array $values): void
     {
         if ($values !== []) {
             $this->addCondition($this->db->escapeIdentifier($column).' NOT IN ('.implode(', ', array_fill(0, count($values), '?')).')');
@@ -239,10 +223,8 @@ class BaseConditionBuilder
 
     /**
      * NOT IN condition with a subquery
-     *
-     * @param  string   $column
      */
-    public function notInSubquery($column, Table $subquery): void
+    public function notInSubquery(string $column, Table $subquery): void
     {
         $this->addCondition($this->db->escapeIdentifier($column).' NOT IN ('.$subquery->buildSelectQuery().')');
         $this->values = array_merge($this->values, $subquery->getValues());
@@ -250,11 +232,8 @@ class BaseConditionBuilder
 
     /**
      * LIKE condition
-     *
-     * @param  string   $column
-     * @param  mixed    $value
      */
-    public function like($column, $value): void
+    public function like(string $column, mixed $value): void
     {
         $this->addCondition($this->db->escapeIdentifier($column).' '.$this->db->getDriver()->getOperator('LIKE').' ?');
         $this->values[] = $value;
@@ -262,11 +241,8 @@ class BaseConditionBuilder
 
     /**
      * ILIKE condition
-     *
-     * @param  string   $column
-     * @param  mixed    $value
      */
-    public function ilike($column, $value): void
+    public function ilike(string $column, mixed $value): void
     {
         $this->addCondition($this->db->escapeIdentifier($column).' '.$this->db->getDriver()->getOperator('ILIKE').' ?');
         $this->values[] = $value;
@@ -274,11 +250,8 @@ class BaseConditionBuilder
 
     /**
      * NOT LIKE condition
-     *
-     * @param $column
-     * @param $value
      */
-    public function notLike($column, $value): void
+    public function notLike(string $column, $value): void
     {
         $this->addCondition($this->db->escapeIdentifier($column).' NOT LIKE ?');
         $this->values[] = $value;
@@ -286,11 +259,8 @@ class BaseConditionBuilder
 
     /**
      * Greater than condition
-     *
-     * @param  string   $column
-     * @param  mixed    $value
      */
-    public function gt($column, $value): void
+    public function gt(string $column, mixed $value): void
     {
         $this->addCondition($this->db->escapeIdentifier($column).' > ?');
         $this->values[] = $value;
@@ -298,10 +268,8 @@ class BaseConditionBuilder
 
     /**
      * Greater than condition with subquery
-     *
-     * @param  string   $column
      */
-    public function gtSubquery($column, Table $subquery): void
+    public function gtSubquery(string $column, Table $subquery): void
     {
         $this->addCondition($this->db->escapeIdentifier($column).' > ('.$subquery->buildSelectQuery().')');
         $this->values = array_merge($this->values, $subquery->getValues());
@@ -309,11 +277,8 @@ class BaseConditionBuilder
 
     /**
      * Lower than condition
-     *
-     * @param  string   $column
-     * @param  mixed    $value
      */
-    public function lt($column, $value): void
+    public function lt(string $column, mixed $value): void
     {
         $this->addCondition($this->db->escapeIdentifier($column).' < ?');
         $this->values[] = $value;
@@ -321,10 +286,8 @@ class BaseConditionBuilder
 
     /**
      * Lower than condition with subquery
-     *
-     * @param  string   $column
      */
-    public function ltSubquery($column, Table $subquery): void
+    public function ltSubquery(string $column, Table $subquery): void
     {
         $this->addCondition($this->db->escapeIdentifier($column).' < ('.$subquery->buildSelectQuery().')');
         $this->values = array_merge($this->values, $subquery->getValues());
@@ -332,11 +295,8 @@ class BaseConditionBuilder
 
     /**
      * Greater than or equals condition
-     *
-     * @param  string   $column
-     * @param  mixed    $value
      */
-    public function gte($column, $value): void
+    public function gte(string $column, mixed $value): void
     {
         $this->addCondition($this->db->escapeIdentifier($column).' >= ?');
         $this->values[] = $value;
@@ -344,10 +304,8 @@ class BaseConditionBuilder
 
     /**
      * Greater than or equal condition with subquery
-     *
-     * @param  string   $column
      */
-    public function gteSubquery($column, Table $subquery): void
+    public function gteSubquery(string $column, Table $subquery): void
     {
         $this->addCondition($this->db->escapeIdentifier($column).' >= ('.$subquery->buildSelectQuery().')');
         $this->values = array_merge($this->values, $subquery->getValues());
@@ -355,11 +313,8 @@ class BaseConditionBuilder
 
     /**
      * Lower than or equals condition
-     *
-     * @param  string   $column
-     * @param  mixed    $value
      */
-    public function lte($column, $value): void
+    public function lte(string $column, mixed $value): void
     {
         $this->addCondition($this->db->escapeIdentifier($column).' <= ?');
         $this->values[] = $value;
@@ -367,10 +322,8 @@ class BaseConditionBuilder
 
     /**
      * Lower than or equal condition with subquery
-     *
-     * @param  string   $column
      */
-    public function lteSubquery($column, Table $subquery): void
+    public function lteSubquery(string $column, Table $subquery): void
     {
         $this->addCondition($this->db->escapeIdentifier($column).' <= ('.$subquery->buildSelectQuery().')');
         $this->values = array_merge($this->values, $subquery->getValues());
@@ -378,12 +331,8 @@ class BaseConditionBuilder
 
     /**
      * BETWEEN operator
-     *
-     * @param $column
-     * @param $lowValue
-     * @param $highValue
      */
-    public function between($column, $lowValue, $highValue): void
+    public function between(string $column, $lowValue, $highValue): void
     {
         $this->addCondition($this->db->escapeIdentifier($column).' BETWEEN ? AND ?');
         $this->values[] = $lowValue;
@@ -392,12 +341,8 @@ class BaseConditionBuilder
 
     /**
      * NOT BETWEEN operator
-     *
-     * @param $column
-     * @param $lowValue
-     * @param $highValue
      */
-    public function notBetween($column, $lowValue, $highValue): void
+    public function notBetween(string $column, $lowValue, $highValue): void
     {
         $this->addCondition($this->db->escapeIdentifier($column).' NOT BETWEEN ? AND ?');
         $this->values[] = $lowValue;
@@ -406,20 +351,16 @@ class BaseConditionBuilder
 
     /**
      * IS NULL condition
-     *
-     * @param  string   $column
      */
-    public function isNull($column): void
+    public function isNull(string $column): void
     {
         $this->addCondition($this->db->escapeIdentifier($column).' IS NULL');
     }
 
     /**
      * IS NOT NULL condition
-     *
-     * @param  string   $column
      */
-    public function notNull($column): void
+    public function notNull(string $column): void
     {
         $this->addCondition($this->db->escapeIdentifier($column).' IS NOT NULL');
     }
@@ -437,12 +378,8 @@ class BaseConditionBuilder
      * JSON field equality condition
      *
      * Compares a scalar value extracted from a JSON column at the given JSONPath.
-     *
-     * @param  string  $column  Column name
-     * @param  string  $path    JSONPath expression (e.g. '$.key' or '$.key1.key2')
-     * @param  mixed   $value   Value to compare against
      */
-    public function jsonEq(string $column, string $path, $value): void
+    public function jsonEq(string $column, string $path, mixed $value): void
     {
         $this->addCondition($this->db->getDriver()->buildJsonExtractCondition(
             $this->db->escapeIdentifier($column),
@@ -454,12 +391,8 @@ class BaseConditionBuilder
 
     /**
      * JSON field inequality condition
-     *
-     * @param  string  $column  Column name
-     * @param  string  $path    JSONPath expression (e.g. 'key' or '$.key' or '$.key1.key2')
-     * @param  mixed   $value   Value to compare against
      */
-    public function jsonNeq(string $column, string $path, $value): void
+    public function jsonNeq(string $column, string $path, mixed $value): void
     {
         $this->addCondition($this->db->getDriver()->buildJsonExtractCondition(
             $this->db->escapeIdentifier($column),
@@ -474,10 +407,6 @@ class BaseConditionBuilder
      *
      * Checks that all elements of $values exist in the JSON array stored in $column,
      * optionally at a JSONPath within the column.
-     *
-     * @param  string      $column  Column name
-     * @param  array       $values  Values that must all be present in the JSON array
-     * @param  string|null $path    JSONPath expression, or null to target the column directly
      */
     public function jsonContains(string $column, array $values, ?string $path = null): void
     {
@@ -501,10 +430,6 @@ class BaseConditionBuilder
      *
      * The inverse of jsonContains — matches rows where the JSON array does NOT
      * contain all of the given values.
-     *
-     * @param  string      $column  Column name
-     * @param  array       $values  Values that must not all be present in the JSON array
-     * @param  string|null $path    JSONPath expression, or null to target the column directly
      */
     public function jsonNotContains(string $column, array $values, ?string $path = null): void
     {

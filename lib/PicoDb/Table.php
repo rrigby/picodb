@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace PicoDb;
 
-use PDO;
 use Closure;
+use PDO;
 use PicoDb\Builder\AggregatedConditionBuilder;
 use PicoDb\Builder\ConditionBuilder;
 use PicoDb\Builder\InsertBuilder;
@@ -60,8 +60,8 @@ class Table
      *
      * @var string
      */
-    const SORT_ASC = 'ASC';
-    const SORT_DESC = 'DESC';
+    public const SORT_ASC = 'ASC';
+    public const SORT_DESC = 'DESC';
 
     protected ConditionBuilder $conditionBuilder;
 
@@ -188,7 +188,8 @@ class Table
     public function insert(array $data): bool
     {
         $this->db->getStatementHandler()
-            ->withSql(InsertBuilder::getInstance($this->db, $this->conditionBuilder)
+            ->withSql(
+                InsertBuilder::getInstance($this->db, $this->conditionBuilder)
                 ->withTable($this->name)
                 ->withColumns(array_keys($data))
                 ->build()
@@ -242,10 +243,8 @@ class Table
 
     /**
      * Find all with a single column
-     *
-     * @param  string    $column
      */
-    public function findAllByColumn($column): array
+    public function findAllByColumn(string $column): array
     {
         $this->columns = [$column];
         $rq = $this->db->execute($this->buildSelectQuery(), $this->getValues());
@@ -266,10 +265,8 @@ class Table
 
     /**
      * Fetch one column, first row
-     *
-     * @param  string   $column
      */
-    public function findOneColumn($column): string|int|null|false
+    public function findOneColumn(string $column): string|int|null|false
     {
         $this->limit(1);
         $this->columns = [$column];
@@ -279,11 +276,8 @@ class Table
 
     /**
      * Build a subquery with an alias
-     *
-     * @param  string  $sql
-     * @param  string  $alias
      */
-    public function subquery($sql, $alias): static
+    public function subquery(string $sql, string $alias): static
     {
         $this->columns[] = '('.$sql.') AS '.$this->db->escapeIdentifier($alias);
         return $this;
@@ -309,7 +303,7 @@ class Table
             )
         );
 
-        $rq = $this->db->execute($sql,  $this->getValues());
+        $rq = $this->db->execute($sql, $this->getValues());
         $result = $rq->fetchColumn();
 
         return (bool) $result;
@@ -323,7 +317,6 @@ class Table
         if ($column !== '*') {
             $column = ($this->distinct ? 'DISTINCT ' : '') . $this->db->escapeIdentifier($column);
         }
-
 
         $sql = sprintf(
             'SELECT COUNT(' . $column . ') FROM %s %s %s %s %s %s %s',
@@ -340,7 +333,7 @@ class Table
             )
         );
 
-        $rq = $this->db->execute($sql,  $this->getValues());
+        $rq = $this->db->execute($sql, $this->getValues());
         $result = $rq->fetchColumn();
 
         return $result ? (int) $result : 0;
@@ -377,11 +370,8 @@ class Table
 
     /**
      * Increment column value
-     *
-     * @param  string $column
-     * @param  string $value
      */
-    public function increment($column, $value): bool
+    public function increment(string $column, int $value): bool
     {
         $sql = sprintf(
             'UPDATE %s SET %s=%s+%d '.$this->conditionBuilder->build(),
@@ -397,11 +387,8 @@ class Table
 
     /**
      * Decrement column value
-     *
-     * @param  string $column
-     * @param  string $value
      */
-    public function decrement($column, $value): bool
+    public function decrement(string $column, int $value): bool
     {
         $sql = sprintf(
             'UPDATE %s SET %s=%s-%d '.$this->conditionBuilder->build(),
@@ -417,14 +404,8 @@ class Table
 
     /**
      * Left join
-     *
-     * @param  string   $table              Join table
-     * @param  string   $foreign_column     Foreign key on the join table
-     * @param  string   $local_column       Local column
-     * @param  string   $local_table        Local table
-     * @param  string   $alias              Join table alias
      */
-    public function join($table, $foreign_column, $local_column, $local_table = '', $alias = ''): static
+    public function join(string $table, string $foreign_column, string $local_column, string $local_table = '', string $alias = ''): static
     {
         $this->joins[] = sprintf(
             'LEFT JOIN %s ON %s=%s',
@@ -438,15 +419,8 @@ class Table
 
     /**
      * Left join
-     *
-     * @param  string   $table1
-     * @param  string   $alias1
-     * @param  string   $column1
-     * @param  string   $table2
-     * @param  string   $column2
-     * @param  array    $conditions
      */
-    public function left($table1, $alias1, $column1, $table2, $column2, $conditions = []): static
+    public function left(string $table1, string $alias1, string $column1, string $table2, string $column2, array $conditions = []): static
     {
         $where = '';
         foreach ($conditions as $column => $value) {
@@ -475,14 +449,8 @@ class Table
 
     /**
      * Inner join
-     *
-     * @param  string   $table1
-     * @param  string   $alias1
-     * @param  string   $column1
-     * @param  string   $table2
-     * @param  string   $column2
      */
-    public function inner($table1, $alias1, $column1, $table2, $column2, array $conditions = []): static
+    public function inner(string $table1, string $alias1, string $column1, string $table2, string $column2, array $conditions = []): static
     {
         $where = '';
         foreach ($conditions as $column => $value) {
@@ -553,19 +521,15 @@ class Table
 
     /**
      * Order by
-     *
-     * @param  string   $column    Column name
-     * @param  string   $order     Direction ASC or DESC
      */
-    public function orderBy($column, $order = self::SORT_ASC): static
+    public function orderBy(string $column, string $order = self::SORT_ASC): static
     {
         $order = strtoupper($order);
         $order = $order === self::SORT_ASC || $order === self::SORT_DESC ? $order : self::SORT_ASC;
 
         if ($this->sqlOrder === '') {
             $this->sqlOrder = ' ORDER BY '.$this->db->escapeIdentifier($column).' '.$order;
-        }
-        else {
+        } else {
             $this->sqlOrder .= ', '.$this->db->escapeIdentifier($column).' '.$order;
         }
 
@@ -574,10 +538,8 @@ class Table
 
     /**
      * Ascending sort
-     *
-     * @param  string   $column
      */
-    public function asc($column): static
+    public function asc(string $column): static
     {
         $this->orderBy($column, self::SORT_ASC);
         return $this;
@@ -585,10 +547,8 @@ class Table
 
     /**
      * Descending sort
-     *
-     * @param  string   $column
      */
-    public function desc($column): static
+    public function desc(string $column): static
     {
         $this->orderBy($column, self::SORT_DESC);
         return $this;
@@ -649,11 +609,8 @@ class Table
 
     /**
      * Sum column
-     *
-     * @param  string  $column
-     * @param  mixed   $value
      */
-    public function sumColumn($column, $value): static
+    public function sumColumn(string $column, mixed $value): static
     {
         $this->sumColumns[$column] = $value;
         return $this;

@@ -24,8 +24,7 @@ class Schema
          * Database instance
          */
         protected Database $db
-    )
-    {
+    ) {
     }
 
     /**
@@ -47,10 +46,8 @@ class Schema
 
     /**
      * Check the schema version and run the migrations
-     *
-     * @param  integer  $last_version
      */
-    public function check($last_version = 1): bool
+    public function check(int $last_version = 1): bool
     {
         $current_version = $this->db->getDriver()->getSchemaVersion();
 
@@ -63,11 +60,8 @@ class Schema
 
     /**
      * Migrate the schema to one version to another
-     *
-     * @param  integer  $current_version
-     * @param  integer  $next_version
      */
-    public function migrateTo($current_version, $next_version): bool
+    public function migrateTo(int $current_version, int $next_version): bool
     {
         try {
             for ($i = $current_version + 1; $i <= $next_version; $i++) {

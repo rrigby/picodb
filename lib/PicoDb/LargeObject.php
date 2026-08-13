@@ -21,10 +21,9 @@ class LargeObject extends Table
      *
      * This method is not compatible with Sqlite and Mysql (return a string instead of resource)
      *
-     * @param  string $column
      * @return resource|string|null
      */
-    public function findOneColumnAsStream($column)
+    public function findOneColumnAsStream(string $column)
     {
         $this->limit(1);
         $this->columns($column);
@@ -42,10 +41,8 @@ class LargeObject extends Table
 
     /**
      * Fetch large object as string
-     *
-     * @param  string $column
      */
-    public function findOneColumnAsString($column): string
+    public function findOneColumnAsString(string $column): string
     {
         $fd = $this->findOneColumnAsStream($column);
 
@@ -64,16 +61,16 @@ class LargeObject extends Table
     /**
      * Insert large object from stream
      *
-     * @param  string           $blobColumn
      * @param  resource|string  $blobDescriptor
      */
-    public function insertFromStream($blobColumn, &$blobDescriptor, array $data = []): bool
+    public function insertFromStream(string $blobColumn, &$blobDescriptor, array $data = []): bool
     {
         $columns = array_merge([$blobColumn], array_keys($data));
         $this->db->startTransaction();
 
         $this->db->getStatementHandler()
-            ->withSql(InsertBuilder::getInstance($this->db, $this->conditionBuilder)
+            ->withSql(
+                InsertBuilder::getInstance($this->db, $this->conditionBuilder)
                 ->withTable($this->name)
                 ->withColumns($columns)
                 ->build()
@@ -89,11 +86,8 @@ class LargeObject extends Table
 
     /**
      * Insert large object from file
-     *
-     * @param  string $blobColumn
-     * @param  string $filename
      */
-    public function insertFromFile($blobColumn, $filename, array $data = []): bool
+    public function insertFromFile(string $blobColumn, string $filename, array $data = []): bool
     {
         $fp = fopen($filename, 'rb');
 
@@ -112,11 +106,8 @@ class LargeObject extends Table
 
     /**
      * Insert large object from string
-     *
-     * @param  string $blobColumn
-     * @param  string $blobData
      */
-    public function insertFromString($blobColumn, $blobData, array $data = []): bool
+    public function insertFromString(string $blobColumn, string $blobData, array $data = []): bool
     {
         return $this->insertFromStream($blobColumn, $blobData, $data);
     }
@@ -124,10 +115,9 @@ class LargeObject extends Table
     /**
      * Update large object from stream
      *
-     * @param  string   $blobColumn
      * @param  resource $blobDescriptor
      */
-    public function updateFromStream($blobColumn, &$blobDescriptor, array $data = []): bool
+    public function updateFromStream(string $blobColumn, &$blobDescriptor, array $data = []): bool
     {
         $values = array_merge(array_values($data), $this->conditionBuilder->getValues());
         $columns = array_merge([$blobColumn], array_keys($data));
@@ -135,7 +125,8 @@ class LargeObject extends Table
         $this->db->startTransaction();
 
         $this->db->getStatementHandler()
-            ->withSql(UpdateBuilder::getInstance($this->db, $this->conditionBuilder)
+            ->withSql(
+                UpdateBuilder::getInstance($this->db, $this->conditionBuilder)
                 ->withTable($this->name)
                 ->withColumns($columns)
                 ->build()
@@ -151,11 +142,8 @@ class LargeObject extends Table
 
     /**
      * Update large object from file
-     *
-     * @param  string $blobColumn
-     * @param  string $filename
      */
-    public function updateFromFile($blobColumn, $filename, array $data = []): bool
+    public function updateFromFile(string $blobColumn, string $filename, array $data = []): bool
     {
         $fp = fopen($filename, 'r');
 

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace PicoDb;
 
-use PDO;
-use PDOStatement;
 use Closure;
-use PDOException;
 use LogicException;
+use PDO;
+use PDOException;
+use PDOStatement;
 use PicoDb\Driver\Base;
 
 /**
@@ -21,8 +21,6 @@ class Database
 {
     /**
      * Database instances
-     *
-     * @static
      */
     private static array $instances = [];
 
@@ -60,25 +58,18 @@ class Database
         $this->closeConnection();
     }
 
-
     /**
      * Register a new database instance
-     *
-     * @static
-     * @param  string    $name        Instance name
-     * @param  Closure   $callback    Callback
      */
-    public static function setInstance($name, Closure $callback): void
+    public static function setInstance(string $name, Closure $callback): void
     {
         self::$instances[$name] = $callback;
     }
 
     /**
      * Get a database instance
-     *
-     * @param  string    $name   Instance name
      */
-    public static function getInstance($name): self
+    public static function getInstance(string $name): self
     {
         if (! isset(self::$instances[$name])) {
             throw new LogicException('No database instance created with that name');
@@ -93,10 +84,8 @@ class Database
 
     /**
      * Add a log message
-     *
-     * @param  mixed $message
      */
-    public function setLogMessage($message): static
+    public function setLogMessage(mixed $message): static
     {
         $this->logs[] = is_array($message) ? var_export($message, true) : $message;
         return $this;
@@ -172,11 +161,8 @@ class Database
 
     /**
      * Escape an identifier (column, table name...)
-     *
-     * @param  string    $value    Value
-     * @param  string    $table    Table name
      */
-    public function escapeIdentifier($value, $table = ''): string
+    public function escapeIdentifier(string $value, string $table = ''): string
     {
         // Do not escape custom query
         if (str_contains($value, '.') || str_contains($value, ' ')) {
@@ -193,11 +179,9 @@ class Database
     /**
      * Escape an identifier list
      *
-     * @param  array     $identifiers  List of identifiers
-     * @param  string    $table        Table name
      * @return string[]
      */
-    public function escapeIdentifierList(array $identifiers, $table = ''): array
+    public function escapeIdentifierList(array $identifiers, string $table = ''): array
     {
         foreach ($identifiers as $key => $value) {
             $identifiers[$key] = $this->escapeIdentifier($value, $table);
@@ -209,8 +193,6 @@ class Database
     /**
      * Execute a prepared statement
      *
-     * @param  string    $sql      SQL query
-     * @param  array     $values   Values
      * @throws SQLException
      */
     public function execute(string $sql, array $values = []): PDOStatement
@@ -223,8 +205,6 @@ class Database
 
     /**
      * Run a transaction
-     *
-     * @param  Closure    $callback     Callback
      */
     public function transaction(Closure $callback): mixed
     {
@@ -286,40 +266,32 @@ class Database
 
     /**
      * Get a table object
-     *
-     * @param  string $table
      */
-    public function table($table): Table
+    public function table(string $table): Table
     {
         return new Table($this, $table);
     }
 
     /**
      * Get a hashtable object
-     *
-     * @param  string $table
      */
-    public function hashtable($table): Hashtable
+    public function hashtable(string $table): Hashtable
     {
         return new Hashtable($this, $table);
     }
 
     /**
      * Get a LOB object
-     *
-     * @param  string $table
      */
-    public function largeObject($table): LargeObject
+    public function largeObject(string $table): LargeObject
     {
         return new LargeObject($this, $table);
     }
 
     /**
      * Get a schema object
-     *
-     * @param  string $namespace
      */
-    public function schema($namespace = null): Schema
+    public function schema(?string $namespace = null): Schema
     {
         $schema = new Schema($this);
 

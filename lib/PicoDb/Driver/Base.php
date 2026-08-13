@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace PicoDb\Driver;
 
-use PDO;
 use LogicException;
+use PDO;
 use PDOException;
 
 /**
@@ -43,35 +43,24 @@ abstract class Base
 
     /**
      * Return true if the error code is a duplicate key
-     *
-     * @param  integer  $code
      */
-    abstract public function isDuplicateKeyError($code): bool;
+    abstract public function isDuplicateKeyError(int $code): bool;
 
     /**
      * Escape identifier
-     *
-     * @param  string  $identifier
      */
-    abstract public function escape($identifier): string;
+    abstract public function escape(string $identifier): string;
 
     /**
      * Get non standard operator
-     *
-     * @param  string  $operator
      */
-    abstract public function getOperator($operator): string;
+    abstract public function getOperator(string $operator): string;
 
     /**
      * Build a JSON field equality condition
      *
      * Returns a SQL string with a single trailing ? for the comparison value.
      * The JSON path is embedded directly as a string literal.
-     *
-     * @abstract
-     * @param  string  $column    Escaped column identifier
-     * @param  string  $path      JSONPath expression (e.g. '$.key' or '$.key1.key2')
-     * @param  string  $operator  Comparison operator
      */
     abstract public function buildJsonExtractCondition(string $column, string $path, string $operator): string;
 
@@ -83,18 +72,12 @@ abstract class Base
      *
      * Returns [string $sql, array $bindings] — a complete condition with all bindings included.
      *
-     * @abstract
-     * @param  string      $column  Escaped column identifier
-     * @param  string|null $path    JSONPath expression, or null to target the column directly
-     * @param  array       $values  The values that must all be present in the JSON array
      * @return array{0: string, 1: array}
      */
     abstract public function buildJsonContainsCondition(string $column, ?string $path, array $values): array;
 
     /**
      * Get last inserted id
-     *
-     * @abstract
      */
     abstract public function getLastId(): string|false;
 
@@ -105,10 +88,8 @@ abstract class Base
 
     /**
      * Set current schema version
-     *
-     * @param  integer  $version
      */
-    abstract public function setSchemaVersion($version): void;
+    abstract public function setSchemaVersion(int $version): void;
 
     /**
      * Constructor
@@ -157,12 +138,8 @@ abstract class Base
 
     /**
      * Get offset limit clause
-     *
-     * @param int|null $limit
-     * @param int|null $offset
-     * @param string|null $order
      */
-    public function getLimitClause($limit, $offset, $order): string
+    public function getLimitClause(?int $limit, ?int $offset, ?string $order): string
     {
         $clause = '';
 
@@ -179,12 +156,8 @@ abstract class Base
 
     /**
      * Upsert for a key/value variable
-     *
-     * @param  string  $table
-     * @param  string  $keyColumn
-     * @param  string  $valueColumn
      */
-    public function upsert($table, $keyColumn, $valueColumn, array $dictionary): bool
+    public function upsert(string $table, string $keyColumn, string $valueColumn, array $dictionary): bool
     {
         try {
             $this->getConnection()->beginTransaction();
@@ -197,8 +170,7 @@ abstract class Base
                 if ($rq->fetchColumn()) {
                     $rq = $this->getConnection()->prepare('UPDATE '.$this->escape($table).' SET '.$this->escape($valueColumn).'=? WHERE '.$this->escape($keyColumn).'=?');
                     $rq->execute([$value, $key]);
-                }
-                else {
+                } else {
                     $rq = $this->getConnection()->prepare('INSERT INTO '.$this->escape($table).' ('.$this->escape($keyColumn).', '.$this->escape($valueColumn).') VALUES (?, ?)');
                     $rq->execute([$key, $value]);
                 }
@@ -207,8 +179,7 @@ abstract class Base
             $this->getConnection()->commit();
 
             return true;
-        }
-        catch (PDOException) {
+        } catch (PDOException) {
             $this->getConnection()->rollBack();
             return false;
         }
@@ -216,20 +187,16 @@ abstract class Base
 
     /**
      * Run EXPLAIN command
-     *
-     * @param  string $sql
      */
-    public function explain($sql, array $values): array
+    public function explain(string $sql, array $values): array
     {
         return $this->getConnection()->query('EXPLAIN '.$this->getSqlFromPreparedStatement($sql, $values))->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
      * Replace placeholder with values in prepared statement
-     *
-     * @param  string $sql
      */
-    protected function getSqlFromPreparedStatement($sql, array $values): string
+    protected function getSqlFromPreparedStatement(string $sql, array $values): string
     {
         foreach ($values as $value) {
             $pos = strpos($sql, '?');

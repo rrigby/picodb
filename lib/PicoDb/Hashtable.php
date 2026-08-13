@@ -85,9 +85,6 @@ class Hashtable extends Table
 
     /**
      * Shortcut method to get a hashmap result
-     *
-     * @param  string  $key    Key column
-     * @param  string  $value  Value column
      */
     public function getAll(string $key, string $value): array
     {

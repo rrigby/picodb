@@ -127,30 +127,24 @@ class Mysql extends Base
 
     /**
      * Return true if the error code is a duplicate key
-     *
-     * @param  integer  $code
      */
-    public function isDuplicateKeyError($code): bool
+    public function isDuplicateKeyError(int $code): bool
     {
-        return $code == 23000;
+        return $code === 23000;
     }
 
     /**
      * Escape identifier
-     *
-     * @param  string  $identifier
      */
-    public function escape($identifier): string
+    public function escape(string $identifier): string
     {
         return '`'.$identifier.'`';
     }
 
     /**
      * Get non standard operator
-     *
-     * @param  string  $operator
      */
-    public function getOperator($operator): string
+    public function getOperator(string $operator): string
     {
         if ($operator === 'LIKE') {
             return 'LIKE BINARY';
@@ -207,10 +201,8 @@ class Mysql extends Base
 
     /**
      * Set current schema version
-     *
-     * @param  integer  $version
      */
-    public function setSchemaVersion($version): void
+    public function setSchemaVersion(int $version): void
     {
         $rq = $this->getConnection()->prepare('UPDATE `'.$this->schemaTable.'` SET `version`=?');
         $rq->execute([$version]);
@@ -219,12 +211,9 @@ class Mysql extends Base
     /**
      * Upsert for a key/value variable
      *
-     * @param  string  $table
-     * @param  string  $keyColumn
-     * @param  string  $valueColumn
      * @return bool    False on failure
      */
-    public function upsert($table, $keyColumn, $valueColumn, array $dictionary): bool
+    public function upsert(string $table, string $keyColumn, string $valueColumn, array $dictionary): bool
     {
         try {
 
@@ -247,8 +236,7 @@ class Mysql extends Base
             $rq->execute($values);
 
             return true;
-        }
-        catch (PDOException) {
+        } catch (PDOException) {
             return false;
         }
     }

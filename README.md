@@ -29,7 +29,7 @@ Documentation
 ### Installation
 
 ```bash
-composer require elvanto/picodb
+composer require rrigby/picodb
 ```
 
 ### Database connection

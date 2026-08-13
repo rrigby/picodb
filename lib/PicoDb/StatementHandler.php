@@ -78,8 +78,7 @@ class StatementHandler
          * Database instance
          */
         protected Database $db
-    )
-    {
+    ) {
     }
 
     /**
@@ -140,13 +139,10 @@ class StatementHandler
 
     /**
      * Bind large object parameter
-     *
-     * @param $name
-     * @param $fp
      */
     public function withLobParam($name, &$fp): static
     {
-        $this->lobParams[$name] =& $fp;
+        $this->lobParams[$name] = & $fp;
         return $this;
     }
 
@@ -231,7 +227,7 @@ class StatementHandler
                     }, $sql);
                 } else {
                     $i = 0;
-                    $sql = preg_replace_callback('/\?/', function($matches) use ($params, &$i): string {
+                    $sql = preg_replace_callback('/\?/', function ($matches) use ($params, &$i): string {
                         $replacement = $params[$i] ?? '';
                         $i++;
                         return "'$replacement'";

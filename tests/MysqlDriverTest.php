@@ -64,10 +64,10 @@ class MysqlDriverTest extends TestCase
         $this->assertEquals('`foobar`', $this->driver->escape('foobar'));
     }
 
-//    public function testDatabaseVersion()
-//    {
-//        $this->assertStringStartsWith('5.', $this->driver->getDatabaseVersion());
-//    }
+    //    public function testDatabaseVersion()
+    //    {
+    //        $this->assertStringStartsWith('5.', $this->driver->getDatabaseVersion());
+    //    }
 
     public function testExplainWithSingleQuoteValue(): void
     {

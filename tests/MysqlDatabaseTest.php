@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase;
-use PicoDb\SQLException;
-
 use PicoDb\Database;
+
+use PicoDb\SQLException;
 
 class MysqlDatabaseTest extends TestCase
 {

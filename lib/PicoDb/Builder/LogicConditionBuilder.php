@@ -23,10 +23,9 @@ class LogicConditionBuilder implements BuilderInterface
 
     /**
      * Add new condition
-     *
-     * @param  string $condition
      */
-    public function withCondition($condition): static {
+    public function withCondition(string $condition): static
+    {
         $this->conditions[] = $condition;
         return $this;
     }

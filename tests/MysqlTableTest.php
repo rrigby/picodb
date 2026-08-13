@@ -261,7 +261,6 @@ class MysqlTableTest extends TestCase
         $this->assertTrue($this->db->table('foobar')->insert(['a' => null, 'b' => 3]));
         $this->assertTrue($this->db->table('foobar')->insert(['a' => 2, 'b' => 4]));
 
-
         $query = $this->db->table('foobar');
         $this->assertEquals(5, $query->count());
         $this->assertEquals(4, $query->count('a'));
@@ -369,7 +368,7 @@ class MysqlTableTest extends TestCase
     {
         $table = $this->db->table('test');
 
-        $this->assertEquals('SELECT * FROM `test`   WHERE `a` IS NOT NULL AND (`b` = ? XOR `c` >= ?)', $table->notNull('a')->xor(fn($q) => $q->eq('b', 2)->gte('c', 5))->buildSelectQuery());
+        $this->assertEquals('SELECT * FROM `test`   WHERE `a` IS NOT NULL AND (`b` = ? XOR `c` >= ?)', $table->notNull('a')->xor(fn ($q) => $q->eq('b', 2)->gte('c', 5))->buildSelectQuery());
         $this->assertEquals([2, 5], $table->getConditionBuilder()->getValues());
     }
 
@@ -458,22 +457,22 @@ class MysqlTableTest extends TestCase
         $this->assertNotFalse($this->db->execute('CREATE TABLE foobar(foo INTEGER, status INTEGER DEFAULT 0)'));
         $this->assertNotFalse($this->db->execute('CREATE TABLE foopoints(foo INTEGER, points INTEGER)'));
 
-        $this->assertNotFalse($this->db->table('foobar')->insert(['foo'=>1, 'status'=>0]));
-        $this->assertNotFalse($this->db->table('foobar')->insert(['foo'=>2, 'status'=>0]));
-        $this->assertNotFalse($this->db->table('foobar')->insert(['foo'=>3, 'status'=>1]));
-        $this->assertNotFalse($this->db->table('foobar')->insert(['foo'=>4, 'status'=>0]));
-        $this->assertNotFalse($this->db->table('foobar')->insert(['foo'=>5, 'status'=>1]));
+        $this->assertNotFalse($this->db->table('foobar')->insert(['foo' => 1, 'status' => 0]));
+        $this->assertNotFalse($this->db->table('foobar')->insert(['foo' => 2, 'status' => 0]));
+        $this->assertNotFalse($this->db->table('foobar')->insert(['foo' => 3, 'status' => 1]));
+        $this->assertNotFalse($this->db->table('foobar')->insert(['foo' => 4, 'status' => 0]));
+        $this->assertNotFalse($this->db->table('foobar')->insert(['foo' => 5, 'status' => 1]));
 
-        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo'=>1, 'points'=>8]));
-        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo'=>1, 'points'=>2]));
-        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo'=>2, 'points'=>18]));
-        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo'=>2, 'points'=>3]));
-        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo'=>3, 'points'=>7]));
-        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo'=>3, 'points'=>8]));
-        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo'=>4, 'points'=>12]));
-        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo'=>4, 'points'=>7]));
-        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo'=>5, 'points'=>18]));
-        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo'=>5, 'points'=>8]));
+        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo' => 1, 'points' => 8]));
+        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo' => 1, 'points' => 2]));
+        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo' => 2, 'points' => 18]));
+        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo' => 2, 'points' => 3]));
+        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo' => 3, 'points' => 7]));
+        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo' => 3, 'points' => 8]));
+        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo' => 4, 'points' => 12]));
+        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo' => 4, 'points' => 7]));
+        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo' => 5, 'points' => 18]));
+        $this->assertNotFalse($this->db->table('foopoints')->insert(['foo' => 5, 'points' => 8]));
 
         $subQuery = $this->db
             ->table('foopoints')
@@ -543,7 +542,6 @@ class MysqlTableTest extends TestCase
             ['a' => 18, 'b' => 2],
             $this->db->table('test2')->columns('a', 'b')->eq('a', 18)->left('test1', 't1', 'foreign_key', 'test2', 'id', ['a' => [18, 19]])->findOne()
         );
-
 
         $this->assertNull(
             $this->db->table('test2')->columns('a', 'b')->eq('a', 18)->left('test1', 't1', 'foreign_key', 'test2', 'id', ['a' => 19])->findOne()
@@ -624,17 +622,17 @@ class MysqlTableTest extends TestCase
         $this->assertNotFalse($this->db->execute('CREATE TABLE test1 (id INTEGER NOT NULL, a INTEGER NOT NULL)'));
         $this->assertNotFalse($this->db->execute('CREATE TABLE test2 (foreign_key INTEGER NOT NULL, b INTEGER)'));
 
-        $this->assertTrue($this->db->table('test1')->insert(['id'=> 1, 'a' => 5]));
-        $this->assertTrue($this->db->table('test1')->insert(['id'=> 2, 'a' => 1]));
-        $this->assertTrue($this->db->table('test1')->insert(['id'=> 3, 'a' => 14]));
-        $this->assertTrue($this->db->table('test1')->insert(['id'=> 4, 'a' => 6]));
-        $this->assertTrue($this->db->table('test1')->insert(['id'=> 5, 'a' => 12]));
+        $this->assertTrue($this->db->table('test1')->insert(['id' => 1, 'a' => 5]));
+        $this->assertTrue($this->db->table('test1')->insert(['id' => 2, 'a' => 1]));
+        $this->assertTrue($this->db->table('test1')->insert(['id' => 3, 'a' => 14]));
+        $this->assertTrue($this->db->table('test1')->insert(['id' => 4, 'a' => 6]));
+        $this->assertTrue($this->db->table('test1')->insert(['id' => 5, 'a' => 12]));
 
-        $this->assertTrue($this->db->table('test2')->insert(['foreign_key'=> 1, 'b' => 185]));
-        $this->assertTrue($this->db->table('test2')->insert(['foreign_key'=> 2, 'b' => 146]));
-        $this->assertTrue($this->db->table('test2')->insert(['foreign_key'=> 3, 'b' => 185]));
-        $this->assertTrue($this->db->table('test2')->insert(['foreign_key'=> 4, 'b' => 34]));
-        $this->assertTrue($this->db->table('test2')->insert(['foreign_key'=> 5, 'b' => 121]));
+        $this->assertTrue($this->db->table('test2')->insert(['foreign_key' => 1, 'b' => 185]));
+        $this->assertTrue($this->db->table('test2')->insert(['foreign_key' => 2, 'b' => 146]));
+        $this->assertTrue($this->db->table('test2')->insert(['foreign_key' => 3, 'b' => 185]));
+        $this->assertTrue($this->db->table('test2')->insert(['foreign_key' => 4, 'b' => 34]));
+        $this->assertTrue($this->db->table('test2')->insert(['foreign_key' => 5, 'b' => 121]));
 
         $subQuery = $this->db
             ->table('test2')
@@ -680,17 +678,17 @@ class MysqlTableTest extends TestCase
         $this->assertNotFalse($this->db->execute('CREATE TABLE test1 (id INTEGER NOT NULL, a INTEGER NOT NULL)'));
         $this->assertNotFalse($this->db->execute('CREATE TABLE test2 (foreign_key INTEGER NOT NULL, b INTEGER)'));
 
-        $this->assertTrue($this->db->table('test1')->insert(['id'=> 1, 'a' => 5]));
-        $this->assertTrue($this->db->table('test1')->insert(['id'=> 2, 'a' => 1]));
-        $this->assertTrue($this->db->table('test1')->insert(['id'=> 3, 'a' => 14]));
-        $this->assertTrue($this->db->table('test1')->insert(['id'=> 4, 'a' => 6]));
-        $this->assertTrue($this->db->table('test1')->insert(['id'=> 5, 'a' => 12]));
+        $this->assertTrue($this->db->table('test1')->insert(['id' => 1, 'a' => 5]));
+        $this->assertTrue($this->db->table('test1')->insert(['id' => 2, 'a' => 1]));
+        $this->assertTrue($this->db->table('test1')->insert(['id' => 3, 'a' => 14]));
+        $this->assertTrue($this->db->table('test1')->insert(['id' => 4, 'a' => 6]));
+        $this->assertTrue($this->db->table('test1')->insert(['id' => 5, 'a' => 12]));
 
-        $this->assertTrue($this->db->table('test2')->insert(['foreign_key'=> 1, 'b' => 185]));
-        $this->assertTrue($this->db->table('test2')->insert(['foreign_key'=> 2, 'b' => 146]));
-        $this->assertTrue($this->db->table('test2')->insert(['foreign_key'=> 3, 'b' => 185]));
-        $this->assertTrue($this->db->table('test2')->insert(['foreign_key'=> 4, 'b' => 34]));
-        $this->assertTrue($this->db->table('test2')->insert(['foreign_key'=> 5, 'b' => 121]));
+        $this->assertTrue($this->db->table('test2')->insert(['foreign_key' => 1, 'b' => 185]));
+        $this->assertTrue($this->db->table('test2')->insert(['foreign_key' => 2, 'b' => 146]));
+        $this->assertTrue($this->db->table('test2')->insert(['foreign_key' => 3, 'b' => 185]));
+        $this->assertTrue($this->db->table('test2')->insert(['foreign_key' => 4, 'b' => 34]));
+        $this->assertTrue($this->db->table('test2')->insert(['foreign_key' => 5, 'b' => 121]));
 
         $subQuery = $this->db
             ->table('test2')
@@ -762,12 +760,12 @@ class MysqlTableTest extends TestCase
         $this->assertTrue($this->db->table('foobar')->insert(['label' => 'second', 'data' => '{"user":"bob","address":{"city":"LA"}}']));
 
         // explicit JSONPath
-        $this->assertEquals('first',  $this->db->table('foobar')->jsonEq('data', '$.user', 'alice')->findOneColumn('label'));
+        $this->assertEquals('first', $this->db->table('foobar')->jsonEq('data', '$.user', 'alice')->findOneColumn('label'));
         $this->assertEquals('second', $this->db->table('foobar')->jsonEq('data', '$.user', 'bob')->findOneColumn('label'));
         // bare key normalises to same result
-        $this->assertEquals('first',  $this->db->table('foobar')->jsonEq('data', 'user', 'alice')->findOneColumn('label'));
+        $this->assertEquals('first', $this->db->table('foobar')->jsonEq('data', 'user', 'alice')->findOneColumn('label'));
         // nested path
-        $this->assertEquals('first',  $this->db->table('foobar')->jsonEq('data', 'address.city', 'NYC')->findOneColumn('label'));
+        $this->assertEquals('first', $this->db->table('foobar')->jsonEq('data', 'address.city', 'NYC')->findOneColumn('label'));
         // no match
         $this->assertFalse($this->db->table('foobar')->jsonEq('data', 'user', 'charlie')->findOneColumn('label'));
     }
@@ -789,7 +787,7 @@ class MysqlTableTest extends TestCase
         $this->assertTrue($this->db->table('foobar')->insert(['label' => 'first',  'tags' => '["php","js","mysql"]']));
         $this->assertTrue($this->db->table('foobar')->insert(['label' => 'second', 'tags' => '["python","django"]']));
 
-        $this->assertEquals('first',  $this->db->table('foobar')->jsonContains('tags', ['php', 'js'])->findOneColumn('label'));
+        $this->assertEquals('first', $this->db->table('foobar')->jsonContains('tags', ['php', 'js'])->findOneColumn('label'));
         $this->assertEquals('second', $this->db->table('foobar')->jsonContains('tags', ['python'])->findOneColumn('label'));
         // values split across rows — neither row contains both
         $this->assertEquals(0, $this->db->table('foobar')->jsonContains('tags', ['php', 'python'])->count());
@@ -802,9 +800,9 @@ class MysqlTableTest extends TestCase
         $this->assertTrue($this->db->table('foobar')->insert(['label' => 'second', 'data' => '{"tags":["python","django"]}']));
 
         // explicit path
-        $this->assertEquals('first',  $this->db->table('foobar')->jsonContains('data', ['php', 'js'], '$.tags')->findOneColumn('label'));
+        $this->assertEquals('first', $this->db->table('foobar')->jsonContains('data', ['php', 'js'], '$.tags')->findOneColumn('label'));
         // bare key path
-        $this->assertEquals('first',  $this->db->table('foobar')->jsonContains('data', ['php', 'js'], 'tags')->findOneColumn('label'));
+        $this->assertEquals('first', $this->db->table('foobar')->jsonContains('data', ['php', 'js'], 'tags')->findOneColumn('label'));
         $this->assertEquals('second', $this->db->table('foobar')->jsonContains('data', ['python'], 'tags')->findOneColumn('label'));
         $this->assertEquals(0, $this->db->table('foobar')->jsonContains('data', ['php', 'python'], 'tags')->count());
     }
@@ -816,7 +814,7 @@ class MysqlTableTest extends TestCase
         $this->assertTrue($this->db->table('foobar')->insert(['label' => 'second', 'tags' => '["python","django"]']));
 
         $this->assertEquals('second', $this->db->table('foobar')->jsonNotContains('tags', ['php', 'js'])->findOneColumn('label'));
-        $this->assertEquals('first',  $this->db->table('foobar')->jsonNotContains('tags', ['python'])->findOneColumn('label'));
+        $this->assertEquals('first', $this->db->table('foobar')->jsonNotContains('tags', ['python'])->findOneColumn('label'));
         $this->assertEquals(2, $this->db->table('foobar')->jsonNotContains('tags', ['php', 'python'])->count());
     }
 
@@ -827,7 +825,7 @@ class MysqlTableTest extends TestCase
         $this->assertTrue($this->db->table('foobar')->insert(['label' => 'second', 'data' => '{"tags":["python","django"]}']));
 
         $this->assertEquals('second', $this->db->table('foobar')->jsonNotContains('data', ['php', 'js'], 'tags')->findOneColumn('label'));
-        $this->assertEquals('first',  $this->db->table('foobar')->jsonNotContains('data', ['python'], 'tags')->findOneColumn('label'));
+        $this->assertEquals('first', $this->db->table('foobar')->jsonNotContains('data', ['python'], 'tags')->findOneColumn('label'));
         $this->assertEquals(2, $this->db->table('foobar')->jsonNotContains('data', ['php', 'python'], 'tags')->count());
     }
 

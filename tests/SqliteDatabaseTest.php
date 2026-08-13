@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase;
-use PicoDb\SQLException;
-
 use PicoDb\Database;
+
+use PicoDb\SQLException;
 
 class SqliteDatabaseTest extends TestCase
 {
@@ -98,7 +98,7 @@ class SqliteDatabaseTest extends TestCase
 
     public function testGetInstance(): void
     {
-        Database::setInstance('main', fn(): Database => new Database(['driver' => 'sqlite', 'filename' => ':memory:']));
+        Database::setInstance('main', fn (): Database => new Database(['driver' => 'sqlite', 'filename' => ':memory:']));
 
         $instance1 = Database::getInstance('main');
         $instance2 = Database::getInstance('main');

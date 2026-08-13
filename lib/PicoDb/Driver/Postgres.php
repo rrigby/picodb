@@ -82,30 +82,24 @@ class Postgres extends Base
 
     /**
      * Return true if the error code is a duplicate key
-     *
-     * @param  integer  $code
      */
-    public function isDuplicateKeyError($code): bool
+    public function isDuplicateKeyError(int $code): bool
     {
-        return $code == 23505 || $code == 23503;
+        return $code === 23505 || $code === 23503;
     }
 
     /**
      * Escape identifier
-     *
-     * @param  string  $identifier
      */
-    public function escape($identifier): string
+    public function escape(string $identifier): string
     {
         return '"'.$identifier.'"';
     }
 
     /**
      * Get non standard operator
-     *
-     * @param  string  $operator
      */
-    public function getOperator($operator): string
+    public function getOperator(string $operator): string
     {
         if ($operator === 'LIKE') {
             return 'LIKE';
@@ -144,8 +138,7 @@ class Postgres extends Base
             $rq->execute();
 
             return (string) $rq->fetchColumn();
-        }
-        catch (PDOException) {
+        } catch (PDOException) {
             return false;
         }
     }
@@ -171,10 +164,8 @@ class Postgres extends Base
 
     /**
      * Set current schema version
-     *
-     * @param  integer  $version
      */
-    public function setSchemaVersion($version): void
+    public function setSchemaVersion(int $version): void
     {
         $rq = $this->getConnection()->prepare('UPDATE '.$this->schemaTable.' SET version=?');
         $rq->execute([$version]);
@@ -182,10 +173,8 @@ class Postgres extends Base
 
     /**
      * Run EXPLAIN command
-     *
-     * @param  string $sql
      */
-    public function explain($sql, array $values): array
+    public function explain(string $sql, array $values): array
     {
         return $this->getConnection()->query('EXPLAIN (FORMAT YAML) '.$this->getSqlFromPreparedStatement($sql, $values))->fetchAll(PDO::FETCH_ASSOC);
     }

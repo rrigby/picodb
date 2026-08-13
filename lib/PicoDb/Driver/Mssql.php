@@ -70,32 +70,26 @@ class Mssql extends Base
 
     /**
      * Return true if the error code is a duplicate key
-     *
-     * @param  integer  $code
      */
-    public function isDuplicateKeyError($code): bool
+    public function isDuplicateKeyError(int $code): bool
     {
-        return $code == 2601;
+        return $code === 2601;
     }
 
     /**
      * Escape identifier
      *
      * https://msdn.microsoft.com/en-us/library/ms175874.aspx
-     *
-     * @param  string  $identifier
      */
-    public function escape($identifier): string
+    public function escape(string $identifier): string
     {
         return '['.$identifier.']';
     }
 
     /**
      * Get non standard operator
-     *
-     * @param  string  $operator
      */
-    public function getOperator($operator): string
+    public function getOperator(string $operator): string
     {
         if ($operator === 'LIKE' || $operator === 'ILIKE') {
             return 'LIKE';
@@ -152,10 +146,8 @@ class Mssql extends Base
 
     /**
      * Set current schema version
-     *
-     * @param  integer  $version
      */
-    public function setSchemaVersion($version): void
+    public function setSchemaVersion(int $version): void
     {
         $rq = $this->getConnection()->prepare('UPDATE ['.$this->schemaTable.'] SET [version]=?');
         $rq->execute([$version]);
@@ -163,10 +155,8 @@ class Mssql extends Base
 
     /**
      * Run EXPLAIN command
-     *
-     * @param  string $sql
      */
-    public function explain($sql, array $values): array
+    public function explain(string $sql, array $values): array
     {
         $this->getConnection()->exec('SET SHOWPLAN_ALL ON');
         return $this->getConnection()->query($this->getSqlFromPreparedStatement($sql, $values))->fetchAll(PDO::FETCH_ASSOC);
@@ -174,12 +164,8 @@ class Mssql extends Base
 
     /**
      * Get offset limit clause
-     *
-     * @param int|null $limit
-     * @param int|null $offset
-     * @param string|null $order
      */
-    public function getLimitClause($limit, $offset, $order): string
+    public function getLimitClause(?int $limit, ?int $offset, ?string $order): string
     {
         $clause = '';
 
