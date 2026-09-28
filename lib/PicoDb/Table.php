@@ -19,6 +19,7 @@ use PicoDb\Driver\Mssql;
  * @author  Frederic Guillot
  *
  * @method   $this   addCondition($sql)
+ * @method   $this   whereRaw(string $sql, array $values = [])
  * @method   $this   beginNot()
  * @method   $this   closeNot()
  * @method   $this   beginAnd()

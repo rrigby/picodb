@@ -78,6 +78,17 @@ class BaseConditionBuilder
         }
     }
 
+    /**
+     * Add a raw condition, binding values to its "?" placeholders in order
+     *
+     * @param mixed[] $values
+     */
+    public function whereRaw(string $sql, array $values = []): void
+    {
+        $this->addCondition("($sql)");
+        $this->values = array_merge($this->values, $values);
+    }
+
     public function beginNot(): void
     {
         $this->embeddedConditionOffset++;
