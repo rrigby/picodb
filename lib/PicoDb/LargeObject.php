@@ -62,6 +62,7 @@ class LargeObject extends Table
      * Insert large object from stream
      *
      * @param  resource|string  $blobDescriptor
+     * @param array<string, mixed> $data
      */
     public function insertFromStream(string $blobColumn, &$blobDescriptor, array $data = []): bool
     {
@@ -86,6 +87,8 @@ class LargeObject extends Table
 
     /**
      * Insert large object from file
+     *
+     * @param array<string, mixed> $data
      */
     public function insertFromFile(string $blobColumn, string $filename, array $data = []): bool
     {
@@ -106,6 +109,8 @@ class LargeObject extends Table
 
     /**
      * Insert large object from string
+     *
+     * @param array<string, mixed> $data
      */
     public function insertFromString(string $blobColumn, string $blobData, array $data = []): bool
     {
@@ -116,6 +121,7 @@ class LargeObject extends Table
      * Update large object from stream
      *
      * @param  resource $blobDescriptor
+     * @param array<string, mixed> $data
      */
     public function updateFromStream(string $blobColumn, &$blobDescriptor, array $data = []): bool
     {
@@ -142,6 +148,8 @@ class LargeObject extends Table
 
     /**
      * Update large object from file
+     *
+     * @param array<string, mixed> $data
      */
     public function updateFromFile(string $blobColumn, string $filename, array $data = []): bool
     {

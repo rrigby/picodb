@@ -34,6 +34,8 @@ class Mysql extends Base
 
     /**
      * Create a new PDO connection
+     *
+     * @param array<string, mixed> $settings
      */
     public function createConnection(array $settings): void
     {
@@ -161,6 +163,10 @@ class Mysql extends Base
         return 'JSON_UNQUOTE(JSON_EXTRACT('.$column.', \''.$path.'\')) '.$operator.' ?';
     }
 
+    /**
+     * @param mixed[] $values
+     * @return array{0: string, 1: mixed[]}
+     */
     public function buildJsonContainsCondition(string $column, ?string $path, array $values): array
     {
         $placeholders = implode(', ', array_fill(0, count($values), '?'));
@@ -212,6 +218,7 @@ class Mysql extends Base
      * Upsert for a key/value variable
      *
      * @return bool    False on failure
+     * @param array<string, mixed> $dictionary
      */
     public function upsert(string $table, string $keyColumn, string $valueColumn, array $dictionary): bool
     {

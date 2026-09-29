@@ -201,6 +201,8 @@ class BaseConditionBuilder
 
     /**
      * IN condition
+     *
+     * @param mixed[] $values
      */
     public function in(string $column, array $values): void
     {
@@ -223,6 +225,8 @@ class BaseConditionBuilder
 
     /**
      * NOT IN condition
+     *
+     * @param mixed[] $values
      */
     public function notIn(string $column, array $values): void
     {
@@ -262,7 +266,7 @@ class BaseConditionBuilder
     /**
      * NOT LIKE condition
      */
-    public function notLike(string $column, $value): void
+    public function notLike(string $column, mixed $value): void
     {
         $this->addCondition($this->db->escapeIdentifier($column).' NOT LIKE ?');
         $this->values[] = $value;
@@ -343,7 +347,7 @@ class BaseConditionBuilder
     /**
      * BETWEEN operator
      */
-    public function between(string $column, $lowValue, $highValue): void
+    public function between(string $column, mixed $lowValue, mixed $highValue): void
     {
         $this->addCondition($this->db->escapeIdentifier($column).' BETWEEN ? AND ?');
         $this->values[] = $lowValue;
@@ -353,7 +357,7 @@ class BaseConditionBuilder
     /**
      * NOT BETWEEN operator
      */
-    public function notBetween(string $column, $lowValue, $highValue): void
+    public function notBetween(string $column, mixed $lowValue, mixed $highValue): void
     {
         $this->addCondition($this->db->escapeIdentifier($column).' NOT BETWEEN ? AND ?');
         $this->values[] = $lowValue;
@@ -418,6 +422,8 @@ class BaseConditionBuilder
      *
      * Checks that all elements of $values exist in the JSON array stored in $column,
      * optionally at a JSONPath within the column.
+     *
+     * @param mixed[] $values
      */
     public function jsonContains(string $column, array $values, ?string $path = null): void
     {
@@ -441,6 +447,8 @@ class BaseConditionBuilder
      *
      * The inverse of jsonContains — matches rows where the JSON array does NOT
      * contain all of the given values.
+     *
+     * @param mixed[] $values
      */
     public function jsonNotContains(string $column, array $values, ?string $path = null): void
     {

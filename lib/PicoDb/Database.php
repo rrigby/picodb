@@ -21,6 +21,8 @@ class Database
 {
     /**
      * Database instances
+     *
+     * @var array<string, Closure|Database>
      */
     private static array $instances = [];
 
@@ -43,6 +45,8 @@ class Database
 
     /**
      * Initialize the driver
+     *
+     * @param array<string, mixed> $settings
      */
     public function __construct(array $settings = [])
     {
@@ -93,6 +97,8 @@ class Database
 
     /**
      * Add many log messages
+     *
+     * @param mixed[] $messages
      */
     public function setLogMessages(array $messages): static
     {
@@ -105,6 +111,8 @@ class Database
 
     /**
      * Get all queries logs
+     *
+     * @return mixed[]
      */
     public function getLogMessages(): array
     {
@@ -185,6 +193,7 @@ class Database
      * Escape an identifier list
      *
      * @return string[]
+     * @param string[] $identifiers
      */
     public function escapeIdentifierList(array $identifiers, string $table = ''): array
     {
@@ -199,6 +208,7 @@ class Database
      * Execute a prepared statement
      *
      * @throws SQLException
+     * @param mixed[] $values
      */
     public function execute(string $sql, array $values = []): PDOStatement
     {

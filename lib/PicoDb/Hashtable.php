@@ -39,6 +39,8 @@ class Hashtable extends Table
 
     /**
      * Insert or update
+     *
+     * @param array<string, mixed> $hashmap
      */
     public function put(array $hashmap): bool
     {
@@ -85,6 +87,8 @@ class Hashtable extends Table
 
     /**
      * Shortcut method to get a hashmap result
+     *
+     * @return array<string, mixed>
      */
     public function getAll(string $key, string $value): array
     {

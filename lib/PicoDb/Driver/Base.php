@@ -7,6 +7,8 @@ namespace PicoDb\Driver;
 use LogicException;
 use PDO;
 use PDOException;
+use PDOStatement;
+use PicoDb\SQLException;
 
 /**
  * Base Driver class
@@ -18,6 +20,8 @@ abstract class Base
 {
     /**
      * List of required settings options
+     *
+     * @var string[]
      */
     protected array $requiredAttributes = [];
 
@@ -28,6 +32,8 @@ abstract class Base
 
     /**
      * Create a new PDO connection
+     *
+     * @param array<string, mixed> $settings
      */
     abstract public function createConnection(array $settings): void;
 
@@ -72,7 +78,8 @@ abstract class Base
      *
      * Returns [string $sql, array $bindings] — a complete condition with all bindings included.
      *
-     * @return array{0: string, 1: array}
+     * @param mixed[] $values
+     * @return array{0: string, 1: mixed[]}
      */
     abstract public function buildJsonContainsCondition(string $column, ?string $path, array $values): array;
 
@@ -93,6 +100,8 @@ abstract class Base
 
     /**
      * Constructor
+     *
+     * @param array<string, mixed> $settings
      */
     public function __construct(array $settings)
     {
@@ -156,6 +165,8 @@ abstract class Base
 
     /**
      * Upsert for a key/value variable
+     *
+     * @param array<string, mixed> $dictionary
      */
     public function upsert(string $table, string $keyColumn, string $valueColumn, array $dictionary): bool
     {
@@ -186,15 +197,36 @@ abstract class Base
     }
 
     /**
+     * Run a query without parameters
+     *
+     * @throws SQLException
+     */
+    protected function query(string $sql): PDOStatement
+    {
+        $statement = $this->getConnection()->query($sql);
+
+        if ($statement === false) {
+            throw new SQLException('SQL Error: unable to run query');
+        }
+
+        return $statement;
+    }
+
+    /**
      * Run EXPLAIN command
+     *
+     * @param mixed[] $values
+     * @return array<int, array<string, mixed>>
      */
     public function explain(string $sql, array $values): array
     {
-        return $this->getConnection()->query('EXPLAIN '.$this->getSqlFromPreparedStatement($sql, $values))->fetchAll(PDO::FETCH_ASSOC);
+        return $this->query('EXPLAIN '.$this->getSqlFromPreparedStatement($sql, $values))->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
      * Replace placeholder with values in prepared statement
+     *
+     * @param mixed[] $values
      */
     protected function getSqlFromPreparedStatement(string $sql, array $values): string
     {
@@ -215,6 +247,6 @@ abstract class Base
      */
     public function getDatabaseVersion(): mixed
     {
-        return $this->getConnection()->query('SELECT VERSION()')->fetchColumn();
+        return $this->query('SELECT VERSION()')->fetchColumn();
     }
 }

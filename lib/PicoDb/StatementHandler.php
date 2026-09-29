@@ -52,11 +52,15 @@ class StatementHandler
 
     /**
      * Positional SQL parameters
+     *
+     * @var mixed[]
      */
     protected array $positionalParams = [];
 
     /**
      * Named SQL parameters
+     *
+     * @var array<string, mixed>
      */
     protected array $namedParams = [];
 
@@ -67,6 +71,8 @@ class StatementHandler
 
     /**
      * LOB params
+     *
+     * @var array<int|string, mixed>
      */
     protected array $lobParams = [];
 
@@ -120,6 +126,8 @@ class StatementHandler
 
     /**
      * Set positional parameters
+     *
+     * @param mixed[] $params
      */
     public function withPositionalParams(array $params): static
     {
@@ -129,6 +137,8 @@ class StatementHandler
 
     /**
      * Set named parameters
+     *
+     * @param array<string, mixed> $params
      */
     public function withNamedParams(array $params): static
     {
@@ -140,7 +150,7 @@ class StatementHandler
     /**
      * Bind large object parameter
      */
-    public function withLobParam($name, &$fp): static
+    public function withLobParam(int|string $name, mixed &$fp): static
     {
         $this->lobParams[$name] = & $fp;
         return $this;

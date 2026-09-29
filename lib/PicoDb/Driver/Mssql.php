@@ -33,6 +33,8 @@ class Mssql extends Base
 
     /**
      * Create a new PDO connection
+     *
+     * @param array<string, mixed> $settings
      */
     public function createConnection(array $settings): void
     {
@@ -103,6 +105,10 @@ class Mssql extends Base
         return 'JSON_VALUE('.$column.', \''.$path.'\') '.$operator.' ?';
     }
 
+    /**
+     * @param mixed[] $values
+     * @return array{0: string, 1: mixed[]}
+     */
     public function buildJsonContainsCondition(string $column, ?string $path, array $values): array
     {
         $count = count($values);
@@ -155,11 +161,14 @@ class Mssql extends Base
 
     /**
      * Run EXPLAIN command
+     *
+     * @param mixed[] $values
+     * @return array<int, array<string, mixed>>
      */
     public function explain(string $sql, array $values): array
     {
         $this->getConnection()->exec('SET SHOWPLAN_ALL ON');
-        return $this->getConnection()->query($this->getSqlFromPreparedStatement($sql, $values))->fetchAll(PDO::FETCH_ASSOC);
+        return $this->query($this->getSqlFromPreparedStatement($sql, $values))->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**

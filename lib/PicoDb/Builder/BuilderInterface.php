@@ -15,5 +15,5 @@ interface BuilderInterface
     /**
      * Build the SQL
      */
-    public function build();
+    public function build(): string;
 }

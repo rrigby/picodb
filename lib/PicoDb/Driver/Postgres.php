@@ -31,6 +31,8 @@ class Postgres extends Base
 
     /**
      * Create a new PDO connection
+     *
+     * @param array<string, mixed> $settings
      */
     public function createConnection(array $settings): void
     {
@@ -119,6 +121,10 @@ class Postgres extends Base
         return 'jsonb_path_query_first('.$column.", '".$path."') #>> '{}' ".$operator.' ?';
     }
 
+    /**
+     * @param mixed[] $values
+     * @return array{0: string, 1: mixed[]}
+     */
     public function buildJsonContainsCondition(string $column, ?string $path, array $values): array
     {
         if ($path === null) {
@@ -173,10 +179,13 @@ class Postgres extends Base
 
     /**
      * Run EXPLAIN command
+     *
+     * @param mixed[] $values
+     * @return array<int, array<string, mixed>>
      */
     public function explain(string $sql, array $values): array
     {
-        return $this->getConnection()->query('EXPLAIN (FORMAT YAML) '.$this->getSqlFromPreparedStatement($sql, $values))->fetchAll(PDO::FETCH_ASSOC);
+        return $this->query('EXPLAIN (FORMAT YAML) '.$this->getSqlFromPreparedStatement($sql, $values))->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
@@ -184,6 +193,6 @@ class Postgres extends Base
      */
     public function getDatabaseVersion(): mixed
     {
-        return $this->getConnection()->query('SHOW server_version')->fetchColumn();
+        return $this->query('SHOW server_version')->fetchColumn();
     }
 }

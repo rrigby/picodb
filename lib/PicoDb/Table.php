@@ -19,7 +19,7 @@ use PicoDb\Driver\Mssql;
  * @author  Frederic Guillot
  *
  * @method   $this   addCondition($sql)
- * @method   $this   whereRaw(string $sql, array $values = [])
+ * @method   $this   whereRaw(string $sql, mixed[] $values = [])
  * @method   $this   beginNot()
  * @method   $this   closeNot()
  * @method   $this   beginAnd()
@@ -30,9 +30,9 @@ use PicoDb\Driver\Mssql;
  * @method   $this   closeXor()
  * @method   $this   eq($column, $value)
  * @method   $this   neq($column, $value)
- * @method   $this   in($column, array $values)
+ * @method   $this   in($column, mixed[] $values)
  * @method   $this   inSubquery($column, Table $subquery)
- * @method   $this   notIn($column, array $values)
+ * @method   $this   notIn($column, mixed[] $values)
  * @method   $this   notInSubquery($column, Table $subquery)
  * @method   $this   like($column, $value)
  * @method   $this   ilike($column, $value)
@@ -51,8 +51,8 @@ use PicoDb\Driver\Mssql;
  * @method   $this   notNull($column)
  * @method   $this   jsonEq(string $column, string $path, mixed $value)
  * @method   $this   jsonNeq(string $column, string $path, mixed $value)
- * @method   $this   jsonContains(string $column, array $values, ?string $path = null)
- * @method   $this   jsonNotContains(string $column, array $values, ?string $path = null)
+ * @method   $this   jsonContains(string $column, mixed[] $values, ?string $path = null)
+ * @method   $this   jsonNotContains(string $column, mixed[] $values, ?string $path = null)
  */
 class Table
 {
@@ -75,6 +75,9 @@ class Table
      */
     private array $columns = [];
 
+    /**
+     * @var array<string, mixed>
+     */
     private array $sumColumns = [];
 
     /**
@@ -113,6 +116,8 @@ class Table
 
     /**
      * Group by those columns
+     *
+     * @var string[]
      */
     private array $groupBy = [];
 
@@ -161,6 +166,8 @@ class Table
 
     /**
      * Insert or update
+     *
+     * @param array<string, mixed> $data
      */
     public function save(array $data): bool
     {
@@ -169,6 +176,8 @@ class Table
 
     /**
      * Update
+     *
+     * @param array<string, mixed> $data
      */
     public function update(array $data = []): bool
     {
@@ -185,6 +194,8 @@ class Table
 
     /**
      * Insert
+     *
+     * @param array<string, mixed> $data
      */
     public function insert(array $data): bool
     {
@@ -202,6 +213,8 @@ class Table
 
     /**
      * Insert a new row and return the ID of the primary key
+     *
+     * @param array<string, mixed> $data
      */
     public function persist(array $data): int|false
     {
@@ -229,6 +242,8 @@ class Table
 
     /**
      * Fetch all rows
+     *
+     * @return mixed[]
      */
     public function findAll(): array
     {
@@ -244,6 +259,8 @@ class Table
 
     /**
      * Find all with a single column
+     *
+     * @return mixed[]
      */
     public function findAllByColumn(string $column): array
     {
@@ -255,6 +272,8 @@ class Table
 
     /**
      * Fetch one row
+     *
+     * @return array<string, mixed>|null
      */
     public function findOne(): ?array
     {
@@ -420,6 +439,8 @@ class Table
 
     /**
      * Left join
+     *
+     * @param array<string, mixed> $conditions
      */
     public function left(string $table1, string $alias1, string $column1, string $table2, string $column2, array $conditions = []): static
     {
@@ -450,6 +471,8 @@ class Table
 
     /**
      * Inner join
+     *
+     * @param array<string, mixed> $conditions
      */
     public function inner(string $table1, string $alias1, string $column1, string $table2, string $column2, array $conditions = []): static
     {
@@ -558,7 +581,7 @@ class Table
     /**
      * Limit
      */
-    public function limit($value): static
+    public function limit(int|string|null $value): static
     {
         if (! is_null($value)) {
             $this->sqlLimit = (int) $value;
@@ -570,7 +593,7 @@ class Table
     /**
      * Offset
      */
-    public function offset($value): static
+    public function offset(int|string|null $value): static
     {
         if (! is_null($value)) {
             $this->sqlOffset = (int) $value;
@@ -767,14 +790,13 @@ class Table
 
     /**
      * Magic method for sql conditions
+     *
+     * @param mixed[] $arguments
      */
     public function __call(string $name, array $arguments): static
     {
-        if ($this->conditionalBuilder === 'HAVING') {
-            call_user_func_array([$this->aggregatedConditionBuilder, $name], $arguments);
-        } else {
-            call_user_func_array([$this->conditionBuilder, $name], $arguments);
-        }
+        $builder = $this->conditionalBuilder === 'HAVING' ? $this->aggregatedConditionBuilder : $this->conditionBuilder;
+        $builder->{$name}(...$arguments);
 
         return $this;
     }
@@ -790,6 +812,8 @@ class Table
 
     /**
      * Values used to construct a select query
+     *
+     * @return mixed[]
      */
     public function getValues(): array
     {
