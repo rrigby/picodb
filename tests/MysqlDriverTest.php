@@ -25,6 +25,36 @@ class MysqlDriverTest extends TestCase
         new Mysql([]);
     }
 
+    public function testBuildOptionsIncludesSslSettings(): void
+    {
+        $driver = new class (['hostname' => getenv('MYSQL_HOST'), 'username' => 'root', 'password' => 'rootpassword', 'database' => 'picodb']) extends Mysql {
+            public function options(array $settings): array
+            {
+                return $this->buildOptions($settings);
+            }
+
+            public function attribute(string $name): int
+            {
+                return $this->getMysqlAttribute($name);
+            }
+        };
+
+        $options = $driver->options([
+            'charset' => 'utf8mb4',
+            'ssl_key' => '/key.pem',
+            'ssl_cert' => '/cert.pem',
+            'ssl_ca' => '/ca.pem',
+            'verify_server_cert' => false,
+        ]);
+
+        $this->assertCount(5, $options);
+        $this->assertSame('SET sql_mode = STRICT_ALL_TABLES, NAMES utf8mb4', $options[$driver->attribute('INIT_COMMAND')]);
+        $this->assertSame('/key.pem', $options[$driver->attribute('SSL_KEY')]);
+        $this->assertSame('/cert.pem', $options[$driver->attribute('SSL_CERT')]);
+        $this->assertSame('/ca.pem', $options[$driver->attribute('SSL_CA')]);
+        $this->assertFalse($options[$driver->attribute('SSL_VERIFY_SERVER_CERT')]);
+    }
+
     public function testDuplicateKeyError(): void
     {
         $this->assertFalse($this->driver->isDuplicateKeyError(1234));

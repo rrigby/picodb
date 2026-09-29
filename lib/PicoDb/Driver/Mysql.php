@@ -68,6 +68,15 @@ class Mysql extends Base
     }
 
     /**
+     * Get a MySQL PDO attribute. PHP 8.4 added Pdo\Mysql::ATTR_* and 8.5 deprecated the
+     * PDO::MYSQL_ATTR_* equivalents.
+     */
+    protected function getMysqlAttribute(string $name): int
+    {
+        return constant(PHP_VERSION_ID >= 80400 ? 'Pdo\\Mysql::ATTR_'.$name : 'PDO::MYSQL_ATTR_'.$name);
+    }
+
+    /**
      * Build connection options
      *
      * @return array<int, mixed>
@@ -77,19 +86,19 @@ class Mysql extends Base
     {
         $charset = empty($settings['charset']) ? 'utf8' : $settings['charset'];
         $options = [
-            PDO::MYSQL_ATTR_INIT_COMMAND => 'SET sql_mode = STRICT_ALL_TABLES, NAMES ' . $charset,
+            $this->getMysqlAttribute('INIT_COMMAND') => 'SET sql_mode = STRICT_ALL_TABLES, NAMES ' . $charset,
         ];
 
         if (! empty($settings['ssl_key'])) {
-            $options[PDO::MYSQL_ATTR_SSL_KEY] = $settings['ssl_key'];
+            $options[$this->getMysqlAttribute('SSL_KEY')] = $settings['ssl_key'];
         }
 
         if (! empty($settings['ssl_cert'])) {
-            $options[PDO::MYSQL_ATTR_SSL_CERT] = $settings['ssl_cert'];
+            $options[$this->getMysqlAttribute('SSL_CERT')] = $settings['ssl_cert'];
         }
 
         if (! empty($settings['ssl_ca'])) {
-            $options[PDO::MYSQL_ATTR_SSL_CA] = $settings['ssl_ca'];
+            $options[$this->getMysqlAttribute('SSL_CA')] = $settings['ssl_ca'];
         }
 
         if (! empty($settings['persistent'])) {
@@ -101,7 +110,7 @@ class Mysql extends Base
         }
 
         if (isset($settings['verify_server_cert'])) {
-            $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = $settings['verify_server_cert'];
+            $options[$this->getMysqlAttribute('SSL_VERIFY_SERVER_CERT')] = $settings['verify_server_cert'];
         }
 
         if (! empty($settings['case'])) {
