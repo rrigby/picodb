@@ -3,7 +3,7 @@ PicoDb
 
 PicoDb is a minimalist database query builder for PHP.
 
-![Run Tests](https://github.com/rrigby/picomapper/workflows/Run%20Tests/badge.svg)
+![Run Tests](https://github.com/rrigby/picodb/workflows/Run%20Tests/badge.svg)
 
 Features
 --------
@@ -11,9 +11,10 @@ Features
 - Easy to use, easy to hack, fast and very lightweight
 - Supported drivers: Sqlite, Mssql, Mysql, Postgresql
 - Requires only PDO
-- Use prepared statements
-- Handle schema migrations
-- Fully unit tested on PHP 8+
+- Uses prepared statements, with values bound by type
+- JSON column conditions
+- Handles schema migrations
+- Fully unit tested on PHP 8.3+
 - License: MIT
 
 Requirements
@@ -22,6 +23,8 @@ Requirements
 - PHP >= 8.3
 - PDO extension
 - Sqlite, Mssql, Mysql or Postgresql
+
+The test suite runs against MySQL 8.4 and 26.7, Postgres 15 and 18, and SQL Server 2022 and 2025.
 
 Documentation
 -------------
@@ -43,14 +46,15 @@ use PicoDb\Database;
 $db = new Database(['driver' => 'sqlite', 'filename' => ':memory:']);
 ```
 
-The Sqlite driver enable foreign keys by default.
+The Sqlite driver enables foreign keys by default.
+
+Optional attributes:
+
+- timeout
 
 #### Microsoft SQL server:
 
 ```php
-// Optional attributes:
-// "schema_table" (the default table name is "schema_version")
-
 $db = new Database([
     'driver' => 'mssql',
     'hostname' => 'localhost',
@@ -62,7 +66,9 @@ $db = new Database([
 
 Optional attributes:
 
-- schema_table
+- port
+- schema_table (the default table name is "schema_version")
+- trust_server_cert
 
 #### Mysql:
 
@@ -107,16 +113,30 @@ Optional attributes:
 
 - port
 - schema_table
+- timeout
 
 ### Execute any SQL query
 
 ```php
 $db->execute('CREATE TABLE mytable (column1 TEXT)');
+$db->execute('SELECT * FROM mytable WHERE column1 = ?', ['value']);
 ```
 
 - Returns a `PDOStatement` if successful
-- Returns `false` if there is a duplicate key error
-- Throws a `SQLException` for other errors
+- Throws a `SQLException` on any error, including duplicate keys. If a transaction is open, it is rolled back.
+
+### Parameter binding
+
+Values are bound with the PDO type that matches their PHP type:
+
+| PHP value | Bound as        |
+|-----------|-----------------|
+| `null`    | `PDO::PARAM_NULL` |
+| `bool`    | `PDO::PARAM_BOOL` |
+| `int`     | `PDO::PARAM_INT`  |
+| anything else | `PDO::PARAM_STR` |
+
+On Postgres, booleans are sent as `t`/`f`, so they must target a `BOOLEAN` column or expression. Cast to `(int)` if the column is an integer.
 
 ### Insertion
 
@@ -128,6 +148,12 @@ or
 
 ```php
 $db->table('mytable')->insert(['column1' => 'test']);
+```
+
+Insert and return the new primary key:
+
+```php
+$id = $db->table('mytable')->persist(['column1' => 'test']);
 ```
 
 ### Fetch last inserted id
@@ -147,7 +173,7 @@ $db->transaction(function ($db) {
 
 - Returns `true` if the callback returns null
 - Returns the callback return value otherwise
-- Throws an SQLException if something is wrong
+- Throws an `SQLException` and rolls back if a query fails
 
 or
 
@@ -158,6 +184,9 @@ $db->closeTransaction();
 
 // Rollback
 $db->cancelTransaction();
+
+// Check whether a transaction is open
+$db->inTransaction();
 ```
 
 ### Fetch all data
@@ -168,6 +197,12 @@ $records = $db->table('mytable')->findAll();
 foreach ($records as $record) {
     var_dump($record['column1']);
 }
+```
+
+Alter the result set with a callback:
+
+```php
+$db->table('mytable')->callback(fn (array $records) => array_column($records, 'column1'))->findAll();
 ```
 
 ### Updates
@@ -187,6 +222,8 @@ $db->table('mytable')->eq('id', 1)->update(['column1' => 'hey']);
 ```php
 $db->table('mytable')->lt('column1', 10)->remove();
 ```
+
+Returns `true` if at least one row was deleted.
 
 ### Sorting
 
@@ -241,7 +278,17 @@ $db->table('mytable')->findOneColumn('column1');
 ### Custom select
 
 ```php
-$db->table('mytable')->select(1)->eq('id', 42)->findOne();
+$db->table('mytable')->select('1')->eq('id', 42)->findOne();
+```
+
+### Subquery as a column
+
+```php
+// SELECT "id", "title", (SELECT COUNT(*) FROM comments WHERE comments.post_id = posts.id) AS "comment_count" FROM "posts"
+$db->table('posts')
+   ->columns('id', 'title')
+   ->subquery('SELECT COUNT(*) FROM comments WHERE comments.post_id = posts.id', 'comment_count')
+   ->findAll();
 ```
 
 ### Distinct
@@ -250,10 +297,21 @@ $db->table('mytable')->select(1)->eq('id', 42)->findOne();
 $db->table('mytable')->distinct('columnA')->findOne();
 ```
 
-### Group by
+### Group by and having
 
 ```php
 $db->table('mytable')->groupBy('columnA')->findAll();
+```
+
+Call `having()` to send the following conditions to the `HAVING` clause, and `where()` to switch back:
+
+```php
+$db->table('tags')
+   ->columns('item_id')
+   ->groupBy('item_id')
+   ->having()
+   ->whereRaw('COUNT(*) > ?', [1])
+   ->findAll();
 ```
 
 ### Count
@@ -317,7 +375,7 @@ $db->table('mytable')->join('my_other_table', 'id', 'foreign_key')->findAll();
 or
 
 ```php
-// SELECT * FROM mytable LEFT JOIN my_other_table AS t1 ON t1.id=mytable.foreign_key
+// SELECT * FROM mytable INNER JOIN my_other_table AS t1 ON t1.id=mytable.foreign_key
 $db->table('mytable')->inner('my_other_table', 't1', 'id', 'mytable', 'foreign_key')->findAll();
 ```
 
@@ -335,6 +393,15 @@ or
 $db->table('mytable')->left('my_other_table', 't1', 'id', 'mytable', 'foreign_key', ['status' => ['archived', 'disabled']])->findAll();
 ```
 
+Join onto a subquery with `joinSubquery()` (LEFT JOIN) or `innerJoinSubquery()` (INNER JOIN):
+
+```php
+// SELECT * FROM mytable LEFT JOIN (SELECT ...) AS t1 ON t1.id=mytable.foreign_key
+$subquery = $db->table('my_other_table')->columns('id', 'column2')->eq('status', 'active');
+
+$db->table('mytable')->joinSubquery($subquery, 't1', 'id', 'foreign_key')->findAll();
+```
+
 
 ### Equals condition
 
@@ -344,13 +411,23 @@ $db->table('mytable')
    ->findAll();
 ```
 
+Not equals:
+
+```php
+$db->table('mytable')
+   ->neq('column1', 'hey')
+   ->findAll();
+```
+
 ### IN condition
 
 ```php
 $db->table('mytable')
-       ->in('column1', ['hey', 'bla'])
-       ->findAll();
+   ->in('column1', ['hey', 'bla'])
+   ->findAll();
 ```
+
+Use `notIn()` for `NOT IN`.
 
 ### IN condition with subquery
 
@@ -358,10 +435,12 @@ $db->table('mytable')
 $subquery = $db->table('another_table')->columns('column2')->eq('column3', 'value3');
 
 $db->table('mytable')
-       ->columns('column_5')
-       ->inSubquery('column1', $subquery)
-       ->findAll();
+   ->columns('column_5')
+   ->inSubquery('column1', $subquery)
+   ->findAll();
 ```
+
+Use `notInSubquery()` for `NOT IN`. Comparisons against a subquery are also available with `gtSubquery()`, `gteSubquery()`, `ltSubquery()` and `lteSubquery()`.
 
 ### Like condition
 
@@ -381,7 +460,9 @@ $db->table('mytable')
    ->findAll();
 ```
 
-### Lower than condition
+Use `notLike()` for `NOT LIKE`.
+
+### Less than condition
 
 ```php
 $db->table('mytable')
@@ -389,7 +470,7 @@ $db->table('mytable')
    ->findAll();
 ```
 
-### Lower than or equal condition
+### Less than or equal condition
 
 ```php
 $db->table('mytable')
@@ -413,6 +494,16 @@ $db->table('mytable')
     ->findAll();
 ```
 
+### BETWEEN condition
+
+```php
+$db->table('mytable')
+   ->between('column1', 1, 10)
+   ->findAll();
+```
+
+Use `notBetween()` for `NOT BETWEEN`.
+
 ### IS NULL condition
 
 ```php
@@ -429,9 +520,39 @@ $db->table('mytable')
    ->findAll();
 ```
 
+### Raw conditions
+
+Add a raw SQL condition with its own bound values. It's wrapped in parentheses and combined with the other conditions:
+
+```php
+$db->table('mytable')
+   ->eq('column1', 'hey')
+   ->whereRaw('column2 BETWEEN ? AND ?', [5, 15])
+   ->findAll();
+```
+
+### JSON conditions
+
+Query values inside JSON columns. Paths can be written as `key`, `key1.key2` or JSONPath (`$.key1.key2`).
+
+```php
+// Scalar value at a path
+$db->table('mytable')->jsonEq('data', 'address.city', 'NYC')->findAll();
+$db->table('mytable')->jsonNeq('data', 'user', 'alice')->findAll();
+
+// The JSON array contains all the given values
+$db->table('mytable')->jsonContains('tags', ['red', 'blue'])->findAll();
+$db->table('mytable')->jsonContains('data', ['admin'], 'roles')->findAll();
+
+// The inverse of jsonContains
+$db->table('mytable')->jsonNotContains('tags', ['archived'])->findAll();
+```
+
+On Postgres, JSON columns must be `jsonb`.
+
 ### Multiple conditions
 
-Add conditions are joined by a `AND`.
+All conditions are joined by an `AND`.
 
 ```php
 $db->table('mytable')
@@ -452,7 +573,7 @@ $db->table('mytable')
     ->findAll();
 ```
 
-How to make an XOR condition:
+How to make an XOR condition (MySQL and SQL Server only):
 
 ```php
 $db->table('mytable')
@@ -490,6 +611,33 @@ $db->table('mytable')
     ->findAll();
 ```
 
+The same groups can be written with closures using `and()`, `or()`, `not()` and `xor()`:
+
+```php
+$db->table('mytable')
+    ->or(fn ($query) => $query
+        ->like('column2', '%mytable')
+        ->and(fn ($query) => $query
+            ->gte('column1', 3)
+            ->eq('column5', 'titi')
+        )
+    )
+    ->findAll();
+```
+
+`not()` joins its conditions with `AND`. To negate an `OR` group, nest it: `->not(fn ($q) => $q->or(...))`.
+
+### Conditional clauses
+
+Apply conditions only when a value is set, with an optional fallback:
+
+```php
+$db->table('mytable')
+    ->when($status !== null, fn ($query) => $query->eq('status', $status))
+    ->when($sort === 'newest', fn ($query) => $query->desc('created_at'), fn ($query) => $query->asc('created_at'))
+    ->findAll();
+```
+
 
 ### Debugging
 
@@ -497,12 +645,21 @@ Log generated queries:
 
 ```php
 $db->getStatementHandler()->withLogging();
+
+// Include the bound values in the log
+$db->getStatementHandler()->withLogging(true);
 ```
 
-Mesure each query time:
+Measure each query time:
 
 ```php
 $db->getStatementHandler()->withStopWatch();
+```
+
+Log the `EXPLAIN` output of each query:
+
+```php
+$db->getStatementHandler()->withExplain();
 ```
 
 Get the number of queries executed:
@@ -522,13 +679,26 @@ print_r($db->getLogMessages());
 Insert a file:
 
 ```php
-$db->largeObject('my_table')->insertFromFile('blobColumn', '/path/to/file', array('id' => 'something'));
+$db->largeObject('my_table')->insertFromFile('blobColumn', '/path/to/file', ['id' => 'something']);
 ```
 
 Insert from a stream:
 
 ```php
-$db->largeObject('my_table')->insertFromStream('blobColumn', $fd, array('id' => 'something'));
+$db->largeObject('my_table')->insertFromStream('blobColumn', $fd, ['id' => 'something']);
+```
+
+Insert from a string:
+
+```php
+$db->largeObject('my_table')->insertFromString('blobColumn', $data, ['id' => 'something']);
+```
+
+Update from a file or a stream:
+
+```php
+$db->largeObject('my_table')->eq('id', 'something')->updateFromFile('blobColumn', '/path/to/file');
+$db->largeObject('my_table')->eq('id', 'something')->updateFromStream('blobColumn', $fd);
 ```
 
 Fetch a large object as a stream (Postgres only):
@@ -549,7 +719,7 @@ Drivers:
     - Column type: `bytea`
 - Sqlite and Mysql
     - Column type: `BLOB`
-    - PDO do no not supports the stream feature (returns a string instead)
+    - PDO does not support streams (returns a string instead)
 
 ### Hashtable (key/value store)
 
@@ -621,8 +791,8 @@ Array
 #### Define a migration
 
 - Migrations are defined in simple functions inside a namespace named "Schema".
-- An instance of PDO is passed to first argument of the function.
-- Function names has the version number at the end.
+- An instance of PDO is passed as the first argument of the function.
+- Function names have the version number at the end.
 
 Example:
 
@@ -655,53 +825,46 @@ function version_2($pdo)
 
 #### Run schema update automatically
 
-- The method `check()` execute all migrations until the version specified
-- If an error occurs, the transaction is rollbacked
-- Foreign keys checks are disabled if possible during the migration
+- The method `check()` executes all migrations up to the version specified
+- If an error occurs, the transaction is rolled back
+- Foreign key checks are disabled if possible during the migration
 
 Example:
 
 ```php
 $last_schema_version = 5;
 
-$db = new PicoDb\Database(array(
+$db = new PicoDb\Database([
     'driver' => 'sqlite',
-    'filename' => '/tmp/mydb.sqlite'
-));
+    'filename' => '/tmp/mydb.sqlite',
+]);
 
-if ($db->schema()->check($last_schema_version)) {
-
-    // Do something...
-}
-else {
-
+if (! $db->schema()->check($last_schema_version)) {
     die('Unable to migrate database schema.');
 }
 ```
 
-### Use a singleton to handle database instances
-
-Setup a new instance:
+Use a different namespace for the migration functions:
 
 ```php
-PicoDb\Database::setInstance('myinstance', function() {
-
-    $db = new PicoDb\Database(array(
-        'driver' => 'sqlite',
-        'filename' => DB_FILENAME
-    ));
-
-    if ($db->schema()->check(DB_VERSION)) {
-        return $db;
-    }
-    else {
-        die('Unable to migrate database schema.');
-    }
-});
+$db->schema('App\\Migrations')->check($last_schema_version);
 ```
 
-Get this instance anywhere in your code:
+Development
+-----------
 
-```php
-PicoDb\Database::getInstance('myinstance')->table(...)
+Start the database containers and run the test suite against every driver:
+
+```bash
+composer docker:start
+composer test
+composer docker:stop
+```
+
+Static analysis and code style:
+
+```bash
+composer phpstan
+composer rector      # dry run, use rector:fix to apply
+composer cs          # dry run, use cs:fix to apply
 ```
