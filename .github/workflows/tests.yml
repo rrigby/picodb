@@ -13,7 +13,7 @@ jobs:
     timeout-minutes: 10
     strategy:
       matrix:
-        php-versions: [ '8.0', '8.1', '8.2', '8.3', '8.4' ]
+        php-versions: [ '8.3', '8.4', '8.5' ]
     name: PHP ${{ matrix.php-versions }} with MySQL 5.7, Postgres 14 & SQL Server 2019
     env:
       MYSQL_HOST: 127.0.0.1
@@ -93,7 +93,7 @@ jobs:
     timeout-minutes: 10
     strategy:
       matrix:
-        php-versions: [ '8.0', '8.1', '8.2', '8.3', '8.4' ]
+        php-versions: [ '8.3', '8.4', '8.5' ]
     name: PHP ${{ matrix.php-versions }} with MySQL 8.0, Postgres 18 & SQL Server 2019
     env:
       MYSQL_HOST: 127.0.0.1

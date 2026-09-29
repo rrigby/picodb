@@ -19,7 +19,7 @@ Features
 Requirements
 ------------
 
-- PHP >= 8.0
+- PHP >= 8.3
 - PDO extension
 - Sqlite, Mssql, Mysql or Postgresql
 
