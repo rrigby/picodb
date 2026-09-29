@@ -569,7 +569,7 @@ class SqliteTableTest extends TestCase
         $func = (fn (): array => ['test']);
 
         $this->assertEquals(['test'], $this->db->table('foobar')->callback($func)->findAll());
-        $this->assertEquals(['plop'], $this->db->table('foobar')->callback([$this, 'myCallback'])->findAll());
+        $this->assertEquals(['plop'], $this->db->table('foobar')->callback($this->myCallback(...))->findAll());
     }
 
     /**

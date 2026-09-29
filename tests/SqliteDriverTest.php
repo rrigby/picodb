@@ -26,7 +26,6 @@ class SqliteDriverTest extends TestCase
         $this->expectExceptionMessage('The database connection is not established.');
 
         $reflection = new ReflectionProperty(Base::class, 'pdo');
-        $reflection->setAccessible(true);
         $reflection->setValue($this->driver, null);
 
         $this->driver->getConnection();

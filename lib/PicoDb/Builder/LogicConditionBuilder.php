@@ -17,7 +17,7 @@ class LogicConditionBuilder implements BuilderInterface
      */
     protected array $conditions = [];
 
-    public function __construct(private string $type)
+    public function __construct(private readonly string $type)
     {
     }
 
