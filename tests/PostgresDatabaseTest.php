@@ -157,7 +157,7 @@ class PostgresDatabaseTest extends TestCase
             $db->getConnection()->exec('CREATE TABLE foobar (something TEXT UNIQUE)');
             $r1 = $db->execute('INSERT INTO foobar (something) VALUES (?)', ['a']);
             $r2 = $db->execute('INSERT INTO foobar (something) VALUES (?)', ['a']);
-            return $r1 && $r2;
+            return $r1 instanceof PDOStatement && $r2 instanceof PDOStatement;
         });
     }
 }

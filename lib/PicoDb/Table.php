@@ -702,7 +702,7 @@ class Table
     {
         if ($condition) {
             $callback($this);
-        } elseif ($default) {
+        } elseif ($default instanceof Closure) {
             $default($this);
         }
         return $this;
