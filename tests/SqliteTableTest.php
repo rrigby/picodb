@@ -25,6 +25,12 @@ class SqliteTableTest extends TestCase
         $this->assertEquals('SELECT "a", "b" FROM "test"', $this->db->table('test')->columns('a', 'b')->buildSelectQuery());
     }
 
+    public function testColumnsWithWildcard(): void
+    {
+        $this->assertEquals('SELECT *, "a" FROM "test"', $this->db->table('test')->columns('*', 'a')->buildSelectQuery());
+        $this->assertEquals('SELECT t.* FROM "test"', $this->db->table('test')->columns('t.*')->buildSelectQuery());
+    }
+
     public function testDistinct(): void
     {
         $this->assertEquals('SELECT DISTINCT "a", "b" FROM "test"', $this->db->table('test')->distinct('a', 'b')->buildSelectQuery());
@@ -128,6 +134,17 @@ class SqliteTableTest extends TestCase
     public function testSubquery(): void
     {
         $this->assertEquals('SELECT (SELECT 1 FROM "foobar" WHERE 1=1) AS "b" FROM "test"', $this->db->table('test')->subquery('SELECT 1 FROM "foobar" WHERE 1=1', 'b')->buildSelectQuery());
+    }
+
+    public function testSubqueryWithWildcard(): void
+    {
+        $this->db->getConnection()->exec('CREATE TABLE test (id INTEGER PRIMARY KEY, name TEXT)');
+        $this->db->table('test')->insert(['name' => 'a']);
+
+        $table = $this->db->table('test')->columns('*')->subquery('SELECT 1', 'b');
+
+        $this->assertEquals('SELECT *, (SELECT 1) AS "b" FROM "test"', $table->buildSelectQuery());
+        $this->assertEquals([['id' => 1, 'name' => 'a', 'b' => 1]], $table->findAll());
     }
 
     public function testConditionEqual(): void

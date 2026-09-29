@@ -27,6 +27,8 @@ class MysqlDatabaseTest extends TestCase
         $this->assertEquals('a.b', $this->db->escapeIdentifier('a.b', 'c'));
         $this->assertEquals('SELECT COUNT(*) FROM test', $this->db->escapeIdentifier('SELECT COUNT(*) FROM test'));
         $this->assertEquals('SELECT COUNT(*) FROM test', $this->db->escapeIdentifier('SELECT COUNT(*) FROM test', 'b'));
+        $this->assertEquals('*', $this->db->escapeIdentifier('*'));
+        $this->assertEquals('`c`.*', $this->db->escapeIdentifier('*', 'c'));
     }
 
     public function testEscapeIdentiferList(): void

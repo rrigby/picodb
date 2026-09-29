@@ -169,6 +169,11 @@ class Database
             return $value;
         }
 
+        // A wildcard is never quoted, only its table
+        if ($value === '*') {
+            return empty($table) ? $value : $this->driver->escape($table).'.*';
+        }
+
         if (! empty($table)) {
             return $this->driver->escape($table).'.'.$this->driver->escape($value);
         }
