@@ -13,7 +13,7 @@ services:
       - POSTGRES_HOST=postgres
       - MSSQL_HOST=sqlserver
   mysql:
-    image: mysql:8.0-oracle
+    image: mysql:26.7
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: picodb
@@ -22,7 +22,7 @@ services:
     ports:
       - "3306:3306"
   postgres:
-    image: postgres:17
+    image: postgres:18
     environment:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: rootpassword
@@ -30,7 +30,7 @@ services:
     ports:
       - "5432:5432"
   sqlserver:
-    image: mcr.microsoft.com/mssql/server:2019-latest
+    image: mcr.microsoft.com/mssql/server:2025-latest
     environment:
       ACCEPT_EULA: Y
       MSSQL_PID: Developer
