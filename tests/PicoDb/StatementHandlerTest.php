@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PicoDb;
 
+use PDO;
 use PHPUnit\Framework\TestCase;
 
 class StatementHandlerTest extends TestCase
@@ -98,6 +99,25 @@ class StatementHandlerTest extends TestCase
             $logMessages[2],
             var_export($logMessages, true)
         );
+    }
+
+    public function testResolveParamTypeMatchesPhpType(): void
+    {
+        $handler = new class ($this->db) extends StatementHandler {
+            public function resolve(mixed $value): int
+            {
+                return $this->resolveParamType($value);
+            }
+        };
+
+        self::assertSame(PDO::PARAM_NULL, $handler->resolve(null));
+        self::assertSame(PDO::PARAM_BOOL, $handler->resolve(true));
+        self::assertSame(PDO::PARAM_BOOL, $handler->resolve(false));
+        self::assertSame(PDO::PARAM_INT, $handler->resolve(0));
+        self::assertSame(PDO::PARAM_INT, $handler->resolve(42));
+        self::assertSame(PDO::PARAM_STR, $handler->resolve('0'));
+        self::assertSame(PDO::PARAM_STR, $handler->resolve(''));
+        self::assertSame(PDO::PARAM_STR, $handler->resolve(3.14));
     }
 
     public function testMoreValuesThanPlaceholders(): void

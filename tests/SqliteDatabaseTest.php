@@ -40,6 +40,30 @@ class SqliteDatabaseTest extends TestCase
         $this->assertEquals('a', $this->db->execute('SELECT something FROM foobar WHERE something=?', ['a'])->fetchColumn());
     }
 
+    public function testThatBooleanParamsBindAgainstNotNullColumn(): void
+    {
+        $this->db->getConnection()->exec('CREATE TABLE foobar (id INTEGER PRIMARY KEY, flag INTEGER NOT NULL)');
+
+        $this->db->execute('INSERT INTO foobar (flag) VALUES (?)', [true]);
+        $this->db->table('foobar')->insert(['flag' => false]);
+
+        $this->assertEquals([1, 0], $this->db->table('foobar')->asc('id')->findAllByColumn('flag'));
+    }
+
+    public function testThatNullParamBindsAsSqlNull(): void
+    {
+        $this->db->getConnection()->exec('CREATE TABLE foobar (id INTEGER PRIMARY KEY, note TEXT)');
+
+        $this->db->execute('INSERT INTO foobar (note) VALUES (?)', [null]);
+        $this->db->execute('INSERT INTO foobar (note) VALUES (?)', ['']);
+
+        $rows = $this->db->execute('SELECT note FROM foobar ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
+        $this->assertSame([
+            ['note' => null],
+            ['note' => ''],
+        ], $rows);
+    }
+
     public function testBadSQLQuery(): void
     {
         $this->expectException(SQLException::class);

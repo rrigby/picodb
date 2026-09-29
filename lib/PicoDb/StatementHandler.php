@@ -200,13 +200,27 @@ class StatementHandler
         }
 
         foreach ($this->positionalParams as $value) {
-            $pdoStatement->bindValue($i, $value, PDO::PARAM_STR);
+            $pdoStatement->bindValue($i, $value, $this->resolveParamType($value));
             $i++;
         }
 
         foreach ($this->namedParams as $name => $value) {
-            $pdoStatement->bindValue($name, $value, PDO::PARAM_STR);
+            $pdoStatement->bindValue($name, $value, $this->resolveParamType($value));
         }
+    }
+
+    /**
+     * Pick the PDO param type that matches the PHP value. Binding everything as PARAM_STR
+     * casts false to '', which Postgres rejects for boolean columns.
+     */
+    protected function resolveParamType(mixed $value): int
+    {
+        return match (true) {
+            $value === null => PDO::PARAM_NULL,
+            is_bool($value) => PDO::PARAM_BOOL,
+            is_int($value) => PDO::PARAM_INT,
+            default => PDO::PARAM_STR,
+        };
     }
 
     /**
