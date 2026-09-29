@@ -1,7 +1,8 @@
 services:
   php:
     build: docker/php
-    command: /app/vendor/bin/phpunit /app/tests
+    working_dir: /app
+    command: vendor/bin/phpunit
     volumes:
       - .:/app
     links:

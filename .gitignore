@@ -2,3 +2,4 @@
 /.idea/
 /.rector-cache/
 /.php-cs-fixer.cache
+/.phpunit.cache/

@@ -8,3 +8,4 @@
 /docker-compose.yml export-ignore
 /phpstan.neon export-ignore
 /rector.php export-ignore
+/phpunit.xml.dist export-ignore

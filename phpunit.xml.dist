@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         cacheDirectory=".phpunit.cache"
+         colors="true"
+         displayDetailsOnAllIssues="true"
+         failOnDeprecation="true"
+         failOnPhpunitDeprecation="true"
+         failOnNotice="true"
+         failOnWarning="true"
+         failOnRisky="true">
+    <testsuites>
+        <testsuite name="PicoDb">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+
+    <source>
+        <include>
+            <directory>lib</directory>
+        </include>
+    </source>
+
+    <php>
+        <!-- Defaults for the docker-compose ports, overridden by the environment -->
+        <env name="MYSQL_HOST" value="127.0.0.1"/>
+        <env name="POSTGRES_HOST" value="127.0.0.1"/>
+        <env name="MSSQL_HOST" value="127.0.0.1"/>
+    </php>
+</phpunit>
