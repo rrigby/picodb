@@ -850,6 +850,33 @@ Use a different namespace for the migration functions:
 $db->schema('App\\Migrations')->check($last_schema_version);
 ```
 
+### Use a singleton to handle database instances
+
+Register an instance. The callback runs the first time the instance is requested:
+
+```php
+PicoDb\Database::setInstance('myinstance', function () {
+    $db = new PicoDb\Database([
+        'driver' => 'sqlite',
+        'filename' => DB_FILENAME,
+    ]);
+
+    if (! $db->schema()->check(DB_VERSION)) {
+        die('Unable to migrate database schema.');
+    }
+
+    return $db;
+});
+```
+
+Get this instance anywhere in your code:
+
+```php
+PicoDb\Database::getInstance('myinstance')->table(...);
+```
+
+`getInstance()` throws a `LogicException` if no instance was registered with that name.
+
 Development
 -----------
 
